@@ -34,6 +34,7 @@ def update():
   clear()
   printgrid()
   print(f"Score: {score}")
+  print(f"Highest tile: {highesttile}")
   print("""
 Use WASD to move the numbers around the grid. 
 When same numbers combine, they double their number.
@@ -208,6 +209,21 @@ def play():
         spawnnewtile()
         update()
       check = 0
+      if highesttile >= 11 and messageactive == 0:
+        inputchosen = 0
+        messageactive = 1
+        clear()
+        while inputchosen != 1:
+          print("Well done! You beat the game by reaching 2048!")
+          print("Press C to continue or E to exit.")
+          input2 = getch()
+          if input2.lower() == "c":
+            inputchosen = 1
+          elif input2.lower() == "e":
+            exit()
+          else:
+            clear()
+        update()
     else:
       if not (merge("w",True) or merge("a",True) or merge("s",True) or merge("d",True)):
         update()
@@ -227,18 +243,5 @@ def play():
             clear()
       else: 
         check = 1
-  if highesttile == 10 and messageactive == 0:
-    inputchosen = 0
-    messageactive = 1
-    while inputchosen != 1:
-      print("Well done! You beat the game by reaching 2048!")
-      print("Press C to continue or E to exit.")
-      input2 = getch()
-      if input2.lower() == "c":
-        continue
-      elif input2.lower() == "e":
-        exit()
-      else:
-        clear()
-  
+
 play()
