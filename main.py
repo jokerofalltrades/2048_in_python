@@ -34,7 +34,6 @@ def update():
   clear()
   printgrid()
   print(f"Score: {score}")
-  print(f"Highest tile: {highesttile}")
   print("""
 Use WASD to move the numbers around the grid. 
 When same numbers combine, they double their number.
