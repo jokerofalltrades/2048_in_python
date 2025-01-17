@@ -277,6 +277,9 @@ def rungame():
         for i in range(num_of_rows*num_of_columns):
             if gamegrid[i] == " ":
                 allfull = False
+        if allfull:
+            if merge("w".lower(),True) or merge("a".lower(),True) or merge("s".lower(),True) or merge("d".lower(),True):
+                allfull = False
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
@@ -286,21 +289,25 @@ def rungame():
                     if event.key == pygame.K_w and (merge("w".lower(),True) or move("w".lower(),True)):
                         move("w".lower())
                         merge("w".lower())
+                        move("w".lower())
                         spawnnewtile()
                         Update()
                     if event.key == pygame.K_a and (merge("a".lower(),True) or move("a".lower(),True)):
                         move("a".lower())
                         merge("a".lower())
+                        move("a".lower())
                         spawnnewtile()
                         Update()
                     if event.key == pygame.K_s and (merge("s".lower(),True) or move("s".lower(),True)):
                         move("s".lower())
                         merge("s".lower())
+                        move("s".lower())
                         spawnnewtile()
                         Update()
                     if event.key == pygame.K_d and (merge("d".lower(),True) or move("d".lower(),True)):
                         move("d".lower())
                         merge("d".lower())
+                        move("d".lower())
                         spawnnewtile()
                         Update()
                     check = 0
