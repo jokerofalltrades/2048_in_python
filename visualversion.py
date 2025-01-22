@@ -239,8 +239,6 @@ def play():
 
 def rendergrid(window):
     colours = {"2":(238,228,218), "4":(237,224,200), "8":(242,177,121), "16":(245,149,99), "32":(246,124,96), "64":(246,94,59), "128":(237,207,115), "256":(237,204,98), "512":(237,200,80), "1024":(237,197,63), "2048":(237,194,45)}
-    big_font = pygame.font.SysFont('quicksand', 40)
-    little_font = pygame.font.SysFont('quicksand', 20)
     x = 5
     y = 5
     for tile in gamegrid:
@@ -257,6 +255,11 @@ def rendergrid(window):
         if x == 425:
             x = 5
             y += 105
+
+def renderscore(window):
+    font = pygame.font.SysFont('quicksand', 50)
+    text_surface = font.render("Score: "+str(score), False, (119, 110, 101))
+    window.blit(text_surface, (5, 430))
 
 def rungame():
     WINDOW_SIZE = 425
@@ -312,5 +315,6 @@ def rungame():
                         Update()
                     check = 0
         rendergrid(window)
+        renderscore(window)
         pygame.display.update()
 rungame()
