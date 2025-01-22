@@ -286,25 +286,25 @@ def rungame():
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if not allfull or check == 1:
-                    if event.key == pygame.K_w and (merge("w".lower(),True) or move("w".lower(),True)):
+                    if (event.key == pygame.K_w or event.key == pygame.K_UP) and (merge("w".lower(),True) or move("w".lower(),True)):
                         move("w".lower())
                         merge("w".lower())
                         move("w".lower())
                         spawnnewtile()
                         Update()
-                    if event.key == pygame.K_a and (merge("a".lower(),True) or move("a".lower(),True)):
+                    if (event.key == pygame.K_a or event.key == pygame.K_LEFT) and (merge("a".lower(),True) or move("a".lower(),True)):
                         move("a".lower())
                         merge("a".lower())
                         move("a".lower())
                         spawnnewtile()
                         Update()
-                    if event.key == pygame.K_s and (merge("s".lower(),True) or move("s".lower(),True)):
+                    if (event.key == pygame.K_s or event.key == pygame.K_DOWN) and (merge("s".lower(),True) or move("s".lower(),True)):
                         move("s".lower())
                         merge("s".lower())
                         move("s".lower())
                         spawnnewtile()
                         Update()
-                    if event.key == pygame.K_d and (merge("d".lower(),True) or move("d".lower(),True)):
+                    if (event.key == pygame.K_d or event.key == pygame.K_RIGHT) and (merge("d".lower(),True) or move("d".lower(),True)):
                         move("d".lower())
                         merge("d".lower())
                         move("d".lower())
