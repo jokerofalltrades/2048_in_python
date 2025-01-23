@@ -163,7 +163,16 @@ def move(direction,test = False):
               tempgrid[_e*num_of_rows+_i-1] = " "
             moved = True
   return moved
-  
+
+def rowAndColumnSplit():
+    rowSplit = [[],[],[],[]]
+    columnSplit = [[],[],[],[]]
+    gameLen = len(gamegrid)
+    for i in range(gameLen):
+        
+
+def newMerge(direction):
+    
 def play():
   check = 0
   messageactive = 0
