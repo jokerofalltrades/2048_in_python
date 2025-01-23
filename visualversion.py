@@ -178,6 +178,11 @@ def rowAndColumnSplit():
 def newMerge(direction):
     rowSplit, columnSplit = rowAndColumnSplit()
     print(rowSplit, columnSplit)
+    if direction == "a"
+        for row in rowSplit:
+            rowLen = len(row)
+            for v in range(rowLen - 1):
+                
     
 def play():
   check = 0
