@@ -169,9 +169,15 @@ def rowAndColumnSplit():
     columnSplit = [[],[],[],[]]
     gameLen = len(gamegrid)
     for i in range(gameLen):
+        if gamegrid[i] != "":
+            rowSplit[i // 4].append(gamegrid[i])
+            columnSplit[i % 4].append(gamegrid[i])
+    return rowSplit, columnSplit
         
 
 def newMerge(direction):
+    rowSplit, columnSplit = rowAndColumnSplit()
+    print(rowSplit, columnSplit)
     
 def play():
   check = 0
@@ -283,6 +289,7 @@ def rungame():
     pygame.init()
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + 80))
     pygame.display.set_caption('2048')
+    newMerge("")
     while True:
         window.fill((255,255,255))
         allfull = True
