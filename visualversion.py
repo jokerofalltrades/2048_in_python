@@ -169,19 +169,34 @@ def rowAndColumnSplit():
     columnSplit = [[],[],[],[]]
     gameLen = len(gamegrid)
     for i in range(gameLen):
-        if gamegrid[i] != "":
-            rowSplit[i // 4].append(gamegrid[i])
-            columnSplit[i % 4].append(gamegrid[i])
+        if gamegrid[i] != " ":
+            rowSplit[i // 4].append(str(gamegrid[i]))
+            columnSplit[i % 4].append(str(gamegrid[i]))
     return rowSplit, columnSplit
         
 
 def newMerge(direction):
     rowSplit, columnSplit = rowAndColumnSplit()
     print(rowSplit, columnSplit)
-    if direction == "a"
+    if direction == "a" or direction == "d":
         for row in rowSplit:
             rowLen = len(row)
-            for v in range(rowLen - 1):
+            if rowLen >= 2:
+                for v in range(rowLen - 1):
+                    if direction == "a":
+                        if row[v] == row[v+1]:
+                            row[v] = str(int(row[v])*2)+"7"
+                            row[v+1] = " "
+                    if direction == "d":
+                        if row[rowLen-v-2] == row[rowLen-v-1]:
+                            row[rowLen-v-1] = str(int(row[rowLen-v-1])*2)+"7"
+                            row[rowLen-v-2] = " "
+            for tile in row[:]:
+                if tile == " "
+                    row.remove(tile)
+                if "7" in tile:
+                    tile.replace("7","")
+    print(rowSplit)          
                 
     
 def play():
@@ -294,7 +309,8 @@ def rungame():
     pygame.init()
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + 80))
     pygame.display.set_caption('2048')
-    newMerge("")
+    newMerge("a")
+    newMerge("d")
     while True:
         window.fill((255,255,255))
         allfull = True
