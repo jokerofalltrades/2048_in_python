@@ -23,9 +23,6 @@ def getch():
 def Update():
   global highesttile
   highesttile = int(highesttile)
-  for i in range(len(gamegrid)):
-    gamegrid[i] = tempgrid[i]
-  clear()
   printgrid()
   print(f"Score: {score}")
   print("""
@@ -66,12 +63,12 @@ def spawnnewtile():
   if not allfull:
     while tile_not_chosen:
       i = random.randint(0,num_of_rows*num_of_columns-1)
-      if tempgrid[i] == " ":
+      if gamegrid[i] == " ":
         tile_not_chosen = False
     if highesttile > 2:
       temphighesttile = 2
     tile_to_spawn = 2**(random.randint(1,temphighesttile))
-    tempgrid[i] = tile_to_spawn
+    gamegrid[i] = tile_to_spawn
 
 def merge(direction,test = False):
   global highesttile
@@ -173,11 +170,50 @@ def rowAndColumnSplit():
             rowSplit[i // 4].append(str(gamegrid[i]))
             columnSplit[i % 4].append(str(gamegrid[i]))
     return rowSplit, columnSplit
-        
 
-def newMerge(direction):
+def constructNewGrid(direction, rowSplit=None, columnSplit=None, temp=False):
+    if temp == False:
+        gamegrid = [" " for _ in range(16)]
+    if temp == True:
+        tempgrid = [" " for _ in range(16)]
+    if rowSplit != None:
+        if direction == "a":
+            for i in range(4):
+                for j in range(len(rowSplit[i])):
+                    if temp == False:
+                        gamegrid[i*4+j] = rowSplit[i][j]
+                    else:
+                        tempgrid[i*4+j] = rowSplit[i][j]
+        if direction == "d":
+            for i in range(4):
+                for j in range(len(rowSplit[i])):
+                    if temp == False:
+                        gamegrid[i*4+(3-j)] = rowSplit[i][j]
+                    else:
+                        tempgrid[i*4+(3-j)] = rowSplit[i][j]
+    if columnSplit != None:
+        if direction == "w":
+            for i in range(4):
+                for j in range(len(columnSplit[i])):
+                    if temp == False:
+                        gamegrid[i+j*4] = columnSplit[i][j]
+                    else:
+                        tempgrid[i+j*4] = columnSplit[i][j]
+        if direction == "s":
+            for i in range(4):
+                for j in range(len(columnSplit[i])):
+                    if temp == False:
+                        gamegrid[i+(3-j)*4] = columnSplit[i][j]
+                    else:
+                        tempgrid[i+(3-j)*4] = columnSplit[i][j]
+    if temp == False:
+        return gamegrid
+    if temp == True:
+        return tempgrid
+
+def newMerge(direction, test=False):
+    merged = False
     rowSplit, columnSplit = rowAndColumnSplit()
-    print(rowSplit, columnSplit)
     if direction == "a" or direction == "d":
         for row in rowSplit:
             rowLen = len(row)
@@ -185,19 +221,54 @@ def newMerge(direction):
                 for v in range(rowLen - 1):
                     if direction == "a":
                         if row[v] == row[v+1]:
-                            row[v] = str(int(row[v])*2)+"7"
+                            merged = True
+                            row[v] = str(int(row[v])*2)+"m"
                             row[v+1] = " "
                     if direction == "d":
                         if row[rowLen-v-2] == row[rowLen-v-1]:
-                            row[rowLen-v-1] = str(int(row[rowLen-v-1])*2)+"7"
+                            merged = True
+                            row[rowLen-v-1] = str(int(row[rowLen-v-1])*2)+"m"
                             row[rowLen-v-2] = " "
             for tile in row[:]:
-                if tile == " "
+                if tile == " ":
                     row.remove(tile)
-                if "7" in tile:
-                    tile.replace("7","")
-    print(rowSplit)          
-                
+            for i in range(len(row)):
+                if "m" in row[i]:
+                    row[i] = row[i].replace("m","")
+        if test == False:
+            gamegrid = constructNewGrid(direction, rowSplit=rowSplit)
+        if test == None:
+            tempgrid = constructNewGrid(direction, rowSplit=rowSplit, temp=True)
+    if direction == "w" or direction == "s":
+        for column in columnSplit:
+            columnLen = len(column)
+            if columnLen >= 2:
+                for v in range(columnLen - 1):
+                    if direction == "w":
+                        if column[v] == column[v+1]:
+                            merged = True
+                            column[v] = str(int(column[v])*2)+"m"
+                            column[v+1] = " "
+                    if direction == "s":
+                        if column[columnLen-v-2] == column[columnLen-v-1]:
+                            merged = True
+                            column[columnLen-v-1] = str(int(column[columnLen-v-1])*2)+"m"
+                            column[columnLen-v-2] = " "
+            for tile in column[:]:
+                if tile == " ":
+                    column.remove(tile)
+            for i in range(len(column)):
+                if "m" in column[i]:
+                    column[i] = column[i].replace("m","")
+        if test == False:
+            gamegrid = constructNewGrid(direction, columnSplit=columnSplit)
+        if test == None:
+            tempgrid = constructNewGrid(direction, columnSplit=columnSplit, temp=True)
+    if test == True:
+        return merged
+    if test == None:
+        return tempgrid
+    return gamegrid
     
 def play():
   check = 0
@@ -278,10 +349,11 @@ def rendergrid(window):
     y = 5
     for tile in gamegrid:
         if tile != " ":
+            inttile = int(tile)
             tilelen = len(str(tile))
             font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)))
             pygame.draw.rect(window, colours[str(tile)], (x, y, 100, 100))
-            if tile > 4:
+            if inttile > 4:
                 text_surface = font.render(str(tile), False, (249, 246, 242))
             else:
                 text_surface = font.render(str(tile), False, (119, 110, 101))
@@ -302,6 +374,8 @@ def rungame():
     messageactive = 0
     global score
     global highesttile
+    global gamegrid
+    global tempgrid
     fillgrid()
     for _i in range(2):
         spawnnewtile()
@@ -309,8 +383,6 @@ def rungame():
     pygame.init()
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + 80))
     pygame.display.set_caption('2048')
-    newMerge("a")
-    newMerge("d")
     while True:
         window.fill((255,255,255))
         allfull = True
@@ -318,7 +390,7 @@ def rungame():
             if gamegrid[i] == " ":
                 allfull = False
         if allfull:
-            if merge("w".lower(),True) or merge("a".lower(),True) or merge("s".lower(),True) or merge("d".lower(),True):
+            if newMerge("w",True) or newMerge("a",True) or newMerge("s",True) or newMerge("d",True):
                 allfull = False
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -326,28 +398,20 @@ def rungame():
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 if not allfull or check == 1:
-                    if (event.key == pygame.K_w or event.key == pygame.K_UP) and (merge("w".lower(),True) or move("w".lower(),True)):
-                        move("w".lower())
-                        merge("w".lower())
-                        move("w".lower())
+                    if (event.key == pygame.K_w or event.key == pygame.K_UP) and (newMerge("w",True) or gamegrid != newMerge("w",None)):
+                        gamegrid = newMerge("w")
                         spawnnewtile()
                         Update()
-                    if (event.key == pygame.K_a or event.key == pygame.K_LEFT) and (merge("a".lower(),True) or move("a".lower(),True)):
-                        move("a".lower())
-                        merge("a".lower())
-                        move("a".lower())
+                    if (event.key == pygame.K_a or event.key == pygame.K_LEFT) and (newMerge("a",True) or gamegrid != newMerge("a",None)):
+                        gamegrid = newMerge("a")
                         spawnnewtile()
                         Update()
-                    if (event.key == pygame.K_s or event.key == pygame.K_DOWN) and (merge("s".lower(),True) or move("s".lower(),True)):
-                        move("s".lower())
-                        merge("s".lower())
-                        move("s".lower())
+                    if (event.key == pygame.K_s or event.key == pygame.K_DOWN) and (newMerge("s",True) or gamegrid != newMerge("s",None)):
+                        gamegrid = newMerge("s")
                         spawnnewtile()
                         Update()
-                    if (event.key == pygame.K_d or event.key == pygame.K_RIGHT) and (merge("d".lower(),True) or move("d".lower(),True)):
-                        move("d".lower())
-                        merge("d".lower())
-                        move("d".lower())
+                    if (event.key == pygame.K_d or event.key == pygame.K_RIGHT) and (newMerge("d",True) or gamegrid != newMerge("d",None)):
+                        gamegrid = newMerge("d")
                         spawnnewtile()
                         Update()
                     check = 0
