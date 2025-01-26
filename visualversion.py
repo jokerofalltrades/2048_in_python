@@ -12,43 +12,11 @@ num_of_rows = 4
 num_of_columns = 4
 highesttile = 1
 score = 0
-
-def clear():
-  os.system('cls' if os.name=='nt' else 'clear')
-
-def getch():
-  chr = str(input(""))
-  return chr
-  
-def Update():
-  global highesttile
-  highesttile = int(highesttile)
-  printgrid()
-  print(f"Score: {score}")
-  print("""
-Use WASD to move the numbers around the grid. 
-When same numbers combine, they double their number.
-Your goal is to reach 2048.
-If you have no legal moves the game is over.""")
   
 def fillgrid():
-  for _i in range(num_of_rows*num_of_columns):
-    gamegrid.append(" ")
-    tempgrid.append(" ")
-
-def printgrid():
-  for _i in range(num_of_columns):
-    row_to_print = ""
-    for _e in range(num_of_rows):
-      if len(str(gamegrid[_i*num_of_columns+_e])) == 1:
-        row_to_print += f"[    {gamegrid[_i*num_of_columns+_e]} ]"
-      elif len(str(gamegrid[_i*num_of_columns+_e])) == 2:
-        row_to_print += f"[   {gamegrid[_i*num_of_columns+_e]} ]"
-      elif len(str(gamegrid[_i*num_of_columns+_e])) == 3:
-        row_to_print += f"[  {gamegrid[_i*num_of_columns+_e]} ]"
-      else:
-        row_to_print += f"[ {gamegrid[_i*num_of_columns+_e]} ]"
-    print(row_to_print)
+    for _i in range(num_of_rows*num_of_columns):
+        gamegrid.append(" ")
+        tempgrid.append(" ")
 
 def spawnnewtile():
   global highesttile
@@ -217,7 +185,6 @@ def rungame():
     fillgrid()
     for _i in range(2):
         spawnnewtile()
-    Update()
     pygame.init()
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + 80))
     pygame.display.set_caption('2048')
@@ -239,19 +206,15 @@ def rungame():
                     if (event.key == pygame.K_w or event.key == pygame.K_UP) and (newMerge("w",test=True) or gamegrid != newMerge("w",test=None)):
                         gamegrid, score = newMerge("w", score)
                         spawnnewtile()
-                        Update()
                     if (event.key == pygame.K_a or event.key == pygame.K_LEFT) and (newMerge("a",test=True) or gamegrid != newMerge("a",test=None)):
                         gamegrid, score = newMerge("a", score)
                         spawnnewtile()
-                        Update()
                     if (event.key == pygame.K_s or event.key == pygame.K_DOWN) and (newMerge("s",test=True) or gamegrid != newMerge("s",test=None)):
                         gamegrid, score = newMerge("s", score)
                         spawnnewtile()
-                        Update()
                     if (event.key == pygame.K_d or event.key == pygame.K_RIGHT) and (newMerge("d",test=True) or gamegrid != newMerge("d",test=None)):
                         gamegrid, score = newMerge("d", score)
                         spawnnewtile()
-                        Update()
                     check = 0
         rendergrid(window)
         renderscore(window)
