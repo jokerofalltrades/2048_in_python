@@ -48,45 +48,27 @@ def rowAndColumnSplit():
             columnSplit[i % 4].append(str(gamegrid[i]))
     return rowSplit, columnSplit
 
-def constructNewGrid(direction, rowSplit=None, columnSplit=None, temp=False):
-    if temp == False:
-        gamegrid = [" " for _ in range(16)]
-    if temp == True:
-        tempgrid = [" " for _ in range(16)]
-    if rowSplit != None:
+def constructNewGrid(direction, rowSplit=None, columnSplit=None):
+    grid = [" " for _ in range(16)]
+    if rowSplit:
         if direction == "a":
             for i in range(4):
                 for j in range(len(rowSplit[i])):
-                    if temp == False:
-                        gamegrid[i*4+j] = rowSplit[i][j]
-                    else:
-                        tempgrid[i*4+j] = rowSplit[i][j]
+                    grid[i*4+j] = rowSplit[i][j]
         if direction == "d":
             for i in range(4):
                 for j in range(len(rowSplit[i])):
-                    if temp == False:
-                        gamegrid[i*4+(3-j)] = rowSplit[i][len(rowSplit[i])-j-1]
-                    else:
-                        tempgrid[i*4+(3-j)] = rowSplit[i][len(rowSplit[i])-j-1]
-    if columnSplit != None:
+                    grid[i*4+(3-j)] = rowSplit[i][len(rowSplit[i])-j-1]
+    if columnSplit:
         if direction == "w":
             for i in range(4):
                 for j in range(len(columnSplit[i])):
-                    if temp == False:
-                        gamegrid[i+j*4] = columnSplit[i][j]
-                    else:
-                        tempgrid[i+j*4] = columnSplit[i][j]
+                    grid[i+j*4] = columnSplit[i][j]
         if direction == "s":
             for i in range(4):
                 for j in range(len(columnSplit[i])):
-                    if temp == False:
-                        gamegrid[i+(3-j)*4] = columnSplit[i][len(columnSplit[i])-j-1]
-                    else:
-                        tempgrid[i+(3-j)*4] = columnSplit[i][len(columnSplit[i])-j-1]
-    if temp == False:
-        return gamegrid
-    if temp == True:
-        return tempgrid
+                    grid[i+(3-j)*4] = columnSplit[i][len(columnSplit[i])-j-1]
+    return grid
 
 def newMerge(direction, score=0, test=False):
     merged = False
@@ -116,7 +98,7 @@ def newMerge(direction, score=0, test=False):
         if test == False:
             gamegrid = constructNewGrid(direction, rowSplit=rowSplit)
         if test == None:
-            tempgrid = constructNewGrid(direction, rowSplit=rowSplit, temp=True)
+            tempgrid = constructNewGrid(direction, rowSplit=rowSplit)
     if direction == "w" or direction == "s":
         for column in columnSplit:
             columnLen = len(column)
@@ -142,7 +124,7 @@ def newMerge(direction, score=0, test=False):
         if test == False:
             gamegrid = constructNewGrid(direction, columnSplit=columnSplit)
         if test == None:
-            tempgrid = constructNewGrid(direction, columnSplit=columnSplit, temp=True)
+            tempgrid = constructNewGrid(direction, columnSplit=columnSplit)
     if test == True:
         return merged
     if test == None:
