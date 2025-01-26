@@ -45,7 +45,6 @@ def rowAndColumnSplitting():
         if gamegrid[i] != " ":
             rowAndColumnSplit[0][i // 4].append(str(gamegrid[i]))
             rowAndColumnSplit[1][i % 4].append(str(gamegrid[i]))
-    print(rowAndColumnSplit)
     return rowAndColumnSplit
 
 def constructNewGrid(direction, fileSplit):
@@ -71,10 +70,7 @@ def constructNewGrid(direction, fileSplit):
 def newMerge(direction, score=0, test=False):
     merged = False
     rowAndColumnSplit = rowAndColumnSplitting()
-    if direction == "a" or direction == "d":
-        isColumn = 0
-    if direction == "w" or direction == "s":
-        isColumn = 1
+    isColumn = 0 if direction == "a" or direction == "d" else 1
     for file in rowAndColumnSplit[isColumn]:
         fileLen = len(file)
         if fileLen >= 2:
