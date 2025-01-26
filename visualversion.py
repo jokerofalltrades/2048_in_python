@@ -38,93 +38,68 @@ def spawnnewtile():
     tile_to_spawn = 2**(random.randint(1,temphighesttile))
     gamegrid[i] = str(tile_to_spawn)
 
-def rowAndColumnSplit():
-    rowSplit = [[],[],[],[]]
-    columnSplit = [[],[],[],[]]
+def rowAndColumnSplitting():
+    rowAndColumnSplit = [[[],[],[],[]],[[],[],[],[]]]
     gameLen = len(gamegrid)
     for i in range(gameLen):
         if gamegrid[i] != " ":
-            rowSplit[i // 4].append(str(gamegrid[i]))
-            columnSplit[i % 4].append(str(gamegrid[i]))
-    return rowSplit, columnSplit
+            rowAndColumnSplit[0][i // 4].append(str(gamegrid[i]))
+            rowAndColumnSplit[1][i % 4].append(str(gamegrid[i]))
+    print(rowAndColumnSplit)
+    return rowAndColumnSplit
 
-def constructNewGrid(direction, rowSplit=None, columnSplit=None):
+def constructNewGrid(direction, fileSplit):
     grid = [" " for _ in range(16)]
-    if rowSplit:
-        if direction == "a":
-            for i in range(4):
-                for j in range(len(rowSplit[i])):
-                    grid[i*4+j] = rowSplit[i][j]
-        if direction == "d":
-            for i in range(4):
-                for j in range(len(rowSplit[i])):
-                    grid[i*4+(3-j)] = rowSplit[i][len(rowSplit[i])-j-1]
-    if columnSplit:
-        if direction == "w":
-            for i in range(4):
-                for j in range(len(columnSplit[i])):
-                    grid[i+j*4] = columnSplit[i][j]
-        if direction == "s":
-            for i in range(4):
-                for j in range(len(columnSplit[i])):
-                    grid[i+(3-j)*4] = columnSplit[i][len(columnSplit[i])-j-1]
+    if direction == "a":
+        for i in range(4):
+            for j in range(len(fileSplit[i])):
+                grid[i*4+j] = fileSplit[i][j]
+    if direction == "d":
+        for i in range(4):
+            for j in range(len(fileSplit[i])):
+                grid[i*4+(3-j)] = fileSplit[i][len(fileSplit[i])-j-1]
+    if direction == "w":
+        for i in range(4):
+            for j in range(len(fileSplit[i])):
+                grid[i+j*4] = fileSplit[i][j]
+    if direction == "s":
+        for i in range(4):
+            for j in range(len(fileSplit[i])):
+                grid[i+(3-j)*4] = fileSplit[i][len(fileSplit[i])-j-1]
     return grid
 
 def newMerge(direction, score=0, test=False):
     merged = False
-    rowSplit, columnSplit = rowAndColumnSplit()
+    rowAndColumnSplit = rowAndColumnSplitting()
     if direction == "a" or direction == "d":
-        for row in rowSplit:
-            rowLen = len(row)
-            if rowLen >= 2:
-                for v in range(rowLen - 1):
-                    if direction == "a":
-                        if row[v] == row[v+1]:
-                            merged = True
-                            row[v] = str(int(row[v])*2)+"m"
-                            row[v+1] = " "
-                    if direction == "d":
-                        if row[rowLen-v-2] == row[rowLen-v-1]:
-                            merged = True
-                            row[rowLen-v-1] = str(int(row[rowLen-v-1])*2)+"m"
-                            row[rowLen-v-2] = " "
-            for tile in row[:]:
-                if tile == " ":
-                    row.remove(tile)
-            for i in range(len(row)):
-                if "m" in row[i]:
-                    row[i] = row[i].replace("m","")
-                    score += int(row[i])
-        if test == False:
-            gamegrid = constructNewGrid(direction, rowSplit=rowSplit)
-        if test == None:
-            tempgrid = constructNewGrid(direction, rowSplit=rowSplit)
+        isColumn = 0
     if direction == "w" or direction == "s":
-        for column in columnSplit:
-            columnLen = len(column)
-            if columnLen >= 2:
-                for v in range(columnLen - 1):
-                    if direction == "w":
-                        if column[v] == column[v+1]:
-                            merged = True
-                            column[v] = str(int(column[v])*2)+"m"
-                            column[v+1] = " "
-                    if direction == "s":
-                        if column[columnLen-v-2] == column[columnLen-v-1]:
-                            merged = True
-                            column[columnLen-v-1] = str(int(column[columnLen-v-1])*2)+"m"
-                            column[columnLen-v-2] = " "
-            for tile in column[:]:
-                if tile == " ":
-                    column.remove(tile)
-            for i in range(len(column)):
-                if "m" in column[i]:
-                    column[i] = column[i].replace("m","")
-                    score += int(column[i])
-        if test == False:
-            gamegrid = constructNewGrid(direction, columnSplit=columnSplit)
-        if test == None:
-            tempgrid = constructNewGrid(direction, columnSplit=columnSplit)
+        isColumn = 1
+    for file in rowAndColumnSplit[isColumn]:
+        fileLen = len(file)
+        if fileLen >= 2:
+            for v in range(fileLen - 1):
+                if direction == "a" or direction == "w":
+                    if file[v] == file[v+1]:
+                        merged = True
+                        file[v] = str(int(file[v])*2)+"m"
+                        file[v+1] = " "
+                if direction == "d" or direction == "s":
+                    if file[fileLen-v-2] == file[fileLen-v-1]:
+                        merged = True
+                        file[fileLen-v-1] = str(int(file[fileLen-v-1])*2)+"m"
+                        file[fileLen-v-2] = " "
+        for tile in file[:]:
+            if tile == " ":
+                file.remove(tile)
+        for i in range(len(file)):
+            if "m" in file[i]:
+                file[i] = file[i].replace("m","")
+                score += int(file[i])
+    if test == False:
+        gamegrid = constructNewGrid(direction, rowAndColumnSplit[isColumn])
+    if test == None:
+        tempgrid = constructNewGrid(direction, rowAndColumnSplit[isColumn])
     if test == True:
         return merged
     if test == None:
