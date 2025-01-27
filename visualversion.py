@@ -111,7 +111,7 @@ def rendergrid(window):
         if tile != " ":
             inttile = int(tile)
             tilelen = len(str(tile))
-            font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)))
+            font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
             pygame.draw.rect(window, colours[str(tile)], (x, y, 100, 100))
             if inttile > 4:
                 text_surface = font.render(str(tile), False, (249, 246, 242))
