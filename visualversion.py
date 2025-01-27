@@ -117,6 +117,8 @@ def rendergrid(window):
             else:
                 text_surface = font.render(str(tile), False, (119, 110, 101))
             window.blit(text_surface, (x + 40 - int((tilelen)**2.2), y + 25 + tilelen*2))
+        else:
+            pygame.draw.rect(window, (184,172,160), (x, y, 100, 100))
         x += 105
         if x == 425:
             x = 5
