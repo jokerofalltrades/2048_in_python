@@ -103,10 +103,10 @@ def newMerge(direction, score=0, test=False):
     return gamegrid, score
 
 def rendergrid(window):
-    colours = {"2":(238,228,218), "4":(237,224,200), "8":(242,177,121), "16":(245,149,99), "32":(246,124,96), "64":(246,94,59), "128":(237,207,115), "256":(237,204,98), "512":(237,200,80), "1024":(237,197,63), "2048":(237,194,45)}
+    colours = {"bg":(184,172,160), "blank":(202,192,180), "2":(238,228,218), "4":(237,224,200), "8":(242,177,121), "16":(245,149,99), "32":(246,124,96), "64":(246,94,59), "128":(237,207,115), "256":(237,204,98), "512":(237,200,80), "1024":(237,197,63), "2048":(237,194,45)}
     x = 5
     y = 5
-    pygame.draw.rect(window, (184,172,160), (0, 0, 425, 425))
+    pygame.draw.rect(window, colours["bg"], (0, 0, 425, 425))
     for tile in gamegrid:
         if tile != " ":
             inttile = int(tile)
@@ -119,7 +119,7 @@ def rendergrid(window):
                 text_surface = font.render(str(tile), False, (119, 110, 101))
             window.blit(text_surface, (x + 40 - int((tilelen)**2.2), y + 25 + tilelen*2))
         else:
-            pygame.draw.rect(window, (202,192,180), (x, y, 100, 100))
+            pygame.draw.rect(window, colours["blank"], (x, y, 100, 100))
         x += 105
         if x == 425:
             x = 5
