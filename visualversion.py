@@ -1,11 +1,24 @@
 import math
 import random
-import time
 import pygame
-import os
-import sys
 from pygame.locals import *
 
+colours = {
+  "bg":(184,172,160), 
+  "0":(202,192,180), 
+  "2":(238,228,218), 
+  "4":(237,224,200), 
+  "8":(242,177,121), 
+  "16":(245,149,99), 
+  "32":(246,124,96), 
+  "64":(246,94,59), 
+  "128":(237,207,115), 
+  "256":(237,204,98), 
+  "512":(237,200,80), 
+  "1024":(237,197,63), 
+  "2048":(237,194,45),
+  "Bottom":(252,247,241)
+}
 gamegrid = []
 tempgrid = []
 num_of_rows = 4
@@ -103,7 +116,6 @@ def newMerge(direction, score=0, test=False):
     return gamegrid, score
 
 def rendergrid(window):
-    colours = {"bg":(184,172,160), "blank":(202,192,180), "2":(238,228,218), "4":(237,224,200), "8":(242,177,121), "16":(245,149,99), "32":(246,124,96), "64":(246,94,59), "128":(237,207,115), "256":(237,204,98), "512":(237,200,80), "1024":(237,197,63), "2048":(237,194,45)}
     x = 5
     y = 5
     pygame.draw.rect(window, colours["bg"], (0, 0, 425, 425))
@@ -119,7 +131,7 @@ def rendergrid(window):
                 text_surface = font.render(str(tile), False, (119, 110, 101))
             window.blit(text_surface, (x + 40 - int((tilelen)**2.2), y + 25 + tilelen*2))
         else:
-            pygame.draw.rect(window, colours["blank"], (x, y, 100, 100))
+            pygame.draw.rect(window, colours["0"], (x, y, 100, 100))
         x += 105
         if x == 425:
             x = 5
@@ -129,6 +141,10 @@ def renderscore(window):
     font = pygame.font.SysFont('quicksand', 50)
     text_surface = font.render("Score: "+str(score), False, (119, 110, 101))
     window.blit(text_surface, (5, 430))
+    
+def renderBottomRow(window):
+    pygame.draw.rect(window, colours["Bottom"], (0, 425, 425, 80))
+    renderscore(window)
 
 def rungame():
     WINDOW_SIZE = 425
@@ -173,6 +189,6 @@ def rungame():
                         spawnnewtile()
                     check = 0
         rendergrid(window)
-        renderscore(window)
+        renderBottomRow(window)
         pygame.display.update()
 rungame()
