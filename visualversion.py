@@ -4,6 +4,8 @@ import pygame
 from pygame.locals import *
 
 colours = {
+  "dfont":(119,110,101),
+  "lfont":(249,246,242),
   "bg":(184,172,160), 
   "0":(202,192,180), 
   "2":(238,228,218), 
@@ -126,9 +128,9 @@ def rendergrid(window):
             font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
             pygame.draw.rect(window, colours[str(tile)], (x, y, 95, 95))
             if inttile > 4:
-                text_surface = font.render(str(tile), False, (249, 246, 242))
+                text_surface = font.render(str(tile), False, colours["lfont"])
             else:
-                text_surface = font.render(str(tile), False, (119, 110, 101))
+                text_surface = font.render(str(tile), False, colours["dfont"])
             window.blit(text_surface, (x + 37 - int((tilelen)**2.3), y + 25 + tilelen*2))
         else:
             pygame.draw.rect(window, colours["0"], (x, y, 95, 95))
