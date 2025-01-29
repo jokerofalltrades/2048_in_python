@@ -1,10 +1,10 @@
-import math
+import sys
 import random
 import pygame
 from pygame.locals import *
 
-colours = {
-    "default":{
+colours = { 
+    "default": {
         "dfont":(119,110,101),
         "lfont":(249,246,242),
         "bg":(184,172,160), 
@@ -21,7 +21,7 @@ colours = {
         "1024":(237,197,63), 
         "2048":(237,194,45),
         "Bottom":(252,247,241)
-    }
+    },
     "sea":{
         "dfont":(43,43,43),
         "lfont":(232,232,232),
@@ -146,7 +146,7 @@ def rendergrid(window, theme):
             inttile = int(tile)
             tilelen = len(str(tile))
             font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
-            pygame.draw.rect(window, colours[str(tile)], (x, y, 95, 95))
+            pygame.draw.rect(window, colours[theme][str(tile)], (x, y, 95, 95))
             if inttile > 4:
                 text_surface = font.render(str(tile), False, colours[theme]["lfont"])
             else:
@@ -172,7 +172,7 @@ def rungame():
     WINDOW_SIZE = 430
     check = 0
     messageactive = 0
-    theme = "default"
+    theme = "sea"
     global score
     global highesttile
     global gamegrid
