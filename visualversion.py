@@ -4,22 +4,42 @@ import pygame
 from pygame.locals import *
 
 colours = {
-  "dfont":(119,110,101),
-  "lfont":(249,246,242),
-  "bg":(184,172,160), 
-  "0":(202,192,180), 
-  "2":(238,228,218), 
-  "4":(237,224,200), 
-  "8":(242,177,121), 
-  "16":(245,149,99), 
-  "32":(246,124,96), 
-  "64":(246,94,59), 
-  "128":(237,207,115), 
-  "256":(237,204,98), 
-  "512":(237,200,80), 
-  "1024":(237,197,63), 
-  "2048":(237,194,45),
-  "Bottom":(252,247,241)
+    "default":{
+        "dfont":(119,110,101),
+        "lfont":(249,246,242),
+        "bg":(184,172,160), 
+        "0":(202,192,180), 
+        "2":(238,228,218), 
+        "4":(237,224,200), 
+        "8":(242,177,121), 
+        "16":(245,149,99), 
+        "32":(246,124,96), 
+        "64":(246,94,59), 
+        "128":(237,207,115), 
+        "256":(237,204,98), 
+        "512":(237,200,80), 
+        "1024":(237,197,63), 
+        "2048":(237,194,45),
+        "Bottom":(252,247,241)
+    }
+    "sea":{
+        "dfont":(43,43,43),
+        "lfont":(232,232,232),
+        "bg":(194, 210, 236),
+        "0":(0,0,0),
+        "2":(140, 188, 255),
+        "4":(84, 155, 255),
+        "8":(70, 180, 180),
+        "16":(50, 210, 181),
+        "32":(100, 210, 100),
+        "64":(120, 210, 50),
+        "128":(240, 100, 50),
+        "256":(240, 100, 150),
+        "512":(230, 50, 180),
+        "1024":(210, 30, 220),
+        "2048":(180, 0, 255),
+        "Bottom":(255,255,255)
+    }
 }
 gamegrid = []
 tempgrid = []
@@ -117,10 +137,10 @@ def newMerge(direction, score=0, test=False):
         return tempgrid
     return gamegrid, score
 
-def rendergrid(window):
+def rendergrid(window, theme):
     x = 10
     y = 10
-    pygame.draw.rect(window, colours["bg"], (0, 0, 430, 430))
+    pygame.draw.rect(window, colours[theme]["bg"], (0, 0, 430, 430))
     for tile in gamegrid:
         if tile != " ":
             inttile = int(tile)
@@ -128,30 +148,31 @@ def rendergrid(window):
             font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
             pygame.draw.rect(window, colours[str(tile)], (x, y, 95, 95))
             if inttile > 4:
-                text_surface = font.render(str(tile), False, colours["lfont"])
+                text_surface = font.render(str(tile), False, colours[theme]["lfont"])
             else:
-                text_surface = font.render(str(tile), False, colours["dfont"])
+                text_surface = font.render(str(tile), False, colours[theme]["dfont"])
             window.blit(text_surface, (x + 37 - int((tilelen)**2.3), y + 25 + tilelen*2))
         else:
-            pygame.draw.rect(window, colours["0"], (x, y, 95, 95))
+            pygame.draw.rect(window, colours[theme]["0"], (x, y, 95, 95))
         x += 105
         if x == 430:
             x = 10
             y += 105
 
-def renderscore(window):
+def renderscore(window, theme):
     font = pygame.font.SysFont('quicksand', 50)
-    text_surface = font.render("Score: "+str(score), False, (119, 110, 101))
+    text_surface = font.render("Score: "+str(score), False, colours[theme]["dfont"])
     window.blit(text_surface, (5, 430))
     
-def renderBottomRow(window):
-    pygame.draw.rect(window, colours["Bottom"], (0, 430, 430, 80))
-    renderscore(window)
+def renderBottomRow(window, theme):
+    pygame.draw.rect(window, colours[theme]["Bottom"], (0, 430, 430, 80))
+    renderscore(window, theme)
 
 def rungame():
     WINDOW_SIZE = 430
     check = 0
     messageactive = 0
+    theme = "default"
     global score
     global highesttile
     global gamegrid
@@ -190,7 +211,7 @@ def rungame():
                         gamegrid, score = newMerge("d", score)
                         spawnnewtile()
                     check = 0
-        rendergrid(window)
-        renderBottomRow(window)
+        rendergrid(window, theme)
+        renderBottomRow(window, theme)
         pygame.display.update()
 rungame()
