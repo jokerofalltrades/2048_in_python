@@ -116,25 +116,25 @@ def newMerge(direction, score=0, test=False):
     return gamegrid, score
 
 def rendergrid(window):
-    x = 5
-    y = 5
-    pygame.draw.rect(window, colours["bg"], (0, 0, 425, 425))
+    x = 10
+    y = 10
+    pygame.draw.rect(window, colours["bg"], (0, 0, 430, 430))
     for tile in gamegrid:
         if tile != " ":
             inttile = int(tile)
             tilelen = len(str(tile))
             font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
-            pygame.draw.rect(window, colours[str(tile)], (x, y, 100, 100))
+            pygame.draw.rect(window, colours[str(tile)], (x, y, 95, 95))
             if inttile > 4:
                 text_surface = font.render(str(tile), False, (249, 246, 242))
             else:
                 text_surface = font.render(str(tile), False, (119, 110, 101))
-            window.blit(text_surface, (x + 40 - int((tilelen)**2.2), y + 25 + tilelen*2))
+            window.blit(text_surface, (x + 37 - int((tilelen)**2.3), y + 25 + tilelen*2))
         else:
-            pygame.draw.rect(window, colours["0"], (x, y, 100, 100))
+            pygame.draw.rect(window, colours["0"], (x, y, 95, 95))
         x += 105
-        if x == 425:
-            x = 5
+        if x == 430:
+            x = 10
             y += 105
 
 def renderscore(window):
@@ -143,11 +143,11 @@ def renderscore(window):
     window.blit(text_surface, (5, 430))
     
 def renderBottomRow(window):
-    pygame.draw.rect(window, colours["Bottom"], (0, 425, 425, 80))
+    pygame.draw.rect(window, colours["Bottom"], (0, 430, 430, 80))
     renderscore(window)
 
 def rungame():
-    WINDOW_SIZE = 425
+    WINDOW_SIZE = 430
     check = 0
     messageactive = 0
     global score
