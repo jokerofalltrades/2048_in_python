@@ -172,7 +172,7 @@ def rungame():
     WINDOW_SIZE = 430
     check = 0
     messageactive = 0
-    theme = "sea"
+    theme = "default"
     global score
     global highesttile
     global gamegrid
@@ -184,7 +184,7 @@ def rungame():
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + 80))
     pygame.display.set_caption('2048')
     while True:
-        window.fill((255,255,255))
+        window.fill((colours[theme]["bg"]))
         allfull = True
         for i in range(num_of_rows*num_of_columns):
             if gamegrid[i] == " ":
