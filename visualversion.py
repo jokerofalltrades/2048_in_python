@@ -53,25 +53,15 @@ def fillgrid():
         gamegrid.append(" ")
         tempgrid.append(" ")
 
-def spawnnewtile():
-  global highesttile
-  temphighesttile = int(highesttile)
-  i = 0
-  tile_not_chosen = True
-  allfull = True
-  for i in range(num_of_rows*num_of_columns):
-    if gamegrid[i] == " ":
-      allfull = False
-      break
-  if not allfull:
-    while tile_not_chosen:
-      i = random.randint(0,num_of_rows*num_of_columns-1)
-      if gamegrid[i] == " ":
-        tile_not_chosen = False
-    if highesttile > 2:
-      temphighesttile = 2
-    tile_to_spawn = 2**(random.randint(1,temphighesttile))
-    gamegrid[i] = str(tile_to_spawn)
+def spawnnewtile(allfull):
+    highesttile = 2
+    emptyTiles = []
+    for i, tile in enumerate(gamegrid):
+        if tile == " ": emptyTiles.append(i)
+        elif int(tile) > highesttile: highesttile = int(tile)
+    if not allfull:
+        index = emptyTiles[random.randint(0,len(emptyTiles)-1)]
+        gamegrid[index] = str(2**random.randint(1,2)) if highesttile >= 4 else "2"
 
 def rowAndColumnSplitting():
     rowAndColumnSplit = [[[],[],[],[]],[[],[],[],[]]]
@@ -179,7 +169,7 @@ def rungame():
     global tempgrid
     fillgrid()
     for _i in range(2):
-        spawnnewtile()
+        spawnnewtile(all(tile != " " for tile in gamegrid))
     pygame.init()
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + 80))
     pygame.display.set_caption('2048')
@@ -200,16 +190,16 @@ def rungame():
                 if not allfull or check == 1:
                     if (event.key == pygame.K_w or event.key == pygame.K_UP) and (newMerge("w",test=True) or gamegrid != newMerge("w",test=None)):
                         gamegrid, score = newMerge("w", score)
-                        spawnnewtile()
+                        spawnnewtile(all(tile != " " for tile in gamegrid))
                     if (event.key == pygame.K_a or event.key == pygame.K_LEFT) and (newMerge("a",test=True) or gamegrid != newMerge("a",test=None)):
                         gamegrid, score = newMerge("a", score)
-                        spawnnewtile()
+                        spawnnewtile(all(tile != " " for tile in gamegrid))
                     if (event.key == pygame.K_s or event.key == pygame.K_DOWN) and (newMerge("s",test=True) or gamegrid != newMerge("s",test=None)):
                         gamegrid, score = newMerge("s", score)
-                        spawnnewtile()
+                        spawnnewtile(all(tile != " " for tile in gamegrid))
                     if (event.key == pygame.K_d or event.key == pygame.K_RIGHT) and (newMerge("d",test=True) or gamegrid != newMerge("d",test=None)):
                         gamegrid, score = newMerge("d", score)
-                        spawnnewtile()
+                        spawnnewtile(all(tile != " " for tile in gamegrid))
                     check = 0
         rendergrid(window, theme)
         renderBottomRow(window, theme)
