@@ -1,7 +1,14 @@
+"""Runs 2048 in pygame window with visual tiles and score display."""
 import pygame
 import sys
 import random
 from pygame.locals import *
+
+# Constants
+WINDOW_SIZE = 430
+TILE_SIZE = 95
+SPACING = 10
+BOTTOM_ROW_HEIGHT = 80
 
 class Game2048:
     def __init__(self):
@@ -9,7 +16,7 @@ class Game2048:
         self.score = 0
         for _ in range(2):
             self.spawn_new_tile()
-
+    
     def spawn_new_tile(self):
         highest_tile = 2
         empty_tiles = [i for i, tile in enumerate(self.gamegrid) if tile == " "]
@@ -119,45 +126,44 @@ class Renderer:
         self.theme = theme
 
     def render_grid(self, gamegrid, window):
-        x = 10
-        y = 10
+        x = SPACING
+        y = SPACING
         pygame.draw.rect(window, self.colours[self.theme]["gridbg"], (0, 0, self.window_size, self.window_size))
         for tile in gamegrid:
             if tile != " ":
                 inttile = int(tile)
                 tilelen = len(str(tile))
                 font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
-                pygame.draw.rect(window, self.colours[self.theme][str(tile)], (x, y, 95, 95))
+                pygame.draw.rect(window, self.colours[self.theme][str(tile)], (x, y, TILE_SIZE, TILE_SIZE))
                 if inttile > 4:
                     text_surface = font.render(str(tile), False, self.colours[self.theme]["lfont"])
                 else:
                     text_surface = font.render(str(tile), False, self.colours[self.theme]["dfont"])
                 window.blit(text_surface, (x + 37 - int((tilelen)**2.3), y + 25 + tilelen*2))
             else:
-                pygame.draw.rect(window, self.colours[self.theme]["0"], (x, y, 95, 95))
-            x += 105
-            if x == self.window_size:
-                x = 10
-                y += 105
+                pygame.draw.rect(window, self.colours[self.theme]["0"], (x, y, TILE_SIZE, TILE_SIZE))
+            x += TILE_SIZE + SPACING
+            if x >= self.window_size:
+                x = SPACING
+                y += TILE_SIZE + SPACING
 
     def render_score(self, score, window):
         font = pygame.font.SysFont('quicksand', 50)
         text_surface = font.render("Score: "+str(score), False, self.colours[self.theme]["dfont"])
-        window.blit(text_surface, (5, 430))
+        window.blit(text_surface, (5, self.window_size))
 
     def render_bottom_row(self, score, window):
-        pygame.draw.rect(window, self.colours[self.theme]["bg"], (0, 430, 430, 80))
+        pygame.draw.rect(window, self.colours[self.theme]["bg"], (0, self.window_size, self.window_size, BOTTOM_ROW_HEIGHT))
         self.render_score(score, window)
 
 def main():
     pygame.init()
-    window_size = 430
     theme = "default"
-    window = pygame.display.set_mode((window_size, window_size + 80))
+    window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
     pygame.display.set_caption('2048')
 
     game = Game2048()
-    renderer = Renderer(window_size, theme)
+    renderer = Renderer(WINDOW_SIZE, theme)
 
     while True:
         window.fill((renderer.colours[theme]["bg"]))
@@ -185,4 +191,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
