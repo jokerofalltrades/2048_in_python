@@ -7,7 +7,7 @@ colours = {
     "default": {
         "dfont":(119,110,101),
         "lfont":(249,246,242),
-        "bg":(184,172,160), 
+        "gridbg":(184,172,160), 
         "0":(202,192,180), 
         "2":(238,228,218), 
         "4":(237,224,200), 
@@ -20,12 +20,12 @@ colours = {
         "512":(237,200,80), 
         "1024":(237,197,63), 
         "2048":(237,194,45),
-        "Bottom":(252,247,241)
+        "bg":(252,247,241)
     },
     "sea":{
         "dfont":(43,43,43),
         "lfont":(232,232,232),
-        "bg":(194, 210, 236),
+        "gridbg":(194, 210, 236),
         "0":(0,0,0),
         "2":(140, 188, 255),
         "4":(84, 155, 255),
@@ -38,7 +38,7 @@ colours = {
         "512":(230, 50, 180),
         "1024":(210, 30, 220),
         "2048":(180, 0, 255),
-        "Bottom":(255,255,255)
+        "bg":(255,255,255)
     }
 }
 gamegrid = [" "] * 16
@@ -120,7 +120,7 @@ def newMerge(direction, score=0, test=False):
 def rendergrid(window, theme):
     x = 10
     y = 10
-    pygame.draw.rect(window, colours[theme]["bg"], (0, 0, 430, 430))
+    pygame.draw.rect(window, colours[theme]["gridbg"], (0, 0, 430, 430))
     for tile in gamegrid:
         if tile != " ":
             inttile = int(tile)
@@ -145,7 +145,7 @@ def renderscore(score, window, theme):
     window.blit(text_surface, (5, 430))
     
 def renderBottomRow(score, window, theme):
-    pygame.draw.rect(window, colours[theme]["Bottom"], (0, 430, 430, 80))
+    pygame.draw.rect(window, colours[theme]["bg"], (0, 430, 430, 80))
     renderscore(score, window, theme)
 
 def rungame():
