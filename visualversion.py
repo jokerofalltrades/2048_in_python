@@ -74,7 +74,8 @@ class Game2048:
             for i in range(len(file)):
                 if "m" in file[i]:
                     file[i] = file[i].replace("m", "")
-                    self.score += int(file[i])
+                    if test == False:
+                        self.score += int(file[i])
         if not test:
             self.gamegrid = self.construct_new_grid(direction, row_and_column_split[is_column])
         if test is None:
@@ -158,7 +159,7 @@ class Renderer:
 
 def main():
     pygame.init()
-    theme = "default"
+    theme = "sea"
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
     pygame.display.set_caption('2048')
 
