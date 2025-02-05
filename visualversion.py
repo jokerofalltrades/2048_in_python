@@ -28,8 +28,8 @@ class Button():
                 action = True
         if pygame.mouse.get_pressed()[0] == 0:
             self.clicked = False
-    surface.blit(self.image, (self.rect.x, self.rect.y))
-    return action
+        surface.blit(self.image, (self.rect.x, self.rect.y))
+        return action
 
 class Game2048:
     def __init__(self):
@@ -156,14 +156,14 @@ class Renderer:
                 inttile = int(tile)
                 tilelen = len(str(tile))
                 font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
-                pygame.draw.rect(window, self.colours[self.theme][str(tile)], (x, y, TILE_SIZE, TILE_SIZE))
+                pygame.draw.rect(window, self.colours[self.theme][str(tile)], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
                 if inttile > 4:
                     text_surface = font.render(str(tile), False, self.colours[self.theme]["lfont"])
                 else:
                     text_surface = font.render(str(tile), False, self.colours[self.theme]["dfont"])
-                window.blit(text_surface, (x + 37 - int((tilelen)**2.3), y + 25 + tilelen*2))
+                window.blit(text_surface, (x + 37 - int((tilelen)**2.3), y + 23 + tilelen*2))
             else:
-                pygame.draw.rect(window, self.colours[self.theme]["0"], (x, y, TILE_SIZE, TILE_SIZE))
+                pygame.draw.rect(window, self.colours[self.theme]["0"], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
             x += TILE_SIZE + SPACING
             if x >= self.window_size:
                 x = SPACING
@@ -180,7 +180,7 @@ class Renderer:
 
 def main():
     pygame.init()
-    theme = "sea"
+    theme = "default"
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
     pygame.display.set_caption('2048')
 
