@@ -9,6 +9,7 @@ WINDOW_SIZE = 430
 TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
+BUTTON_SIZE = 48
 
 class Button():
     def __init__(self, x, y, image, scale):
@@ -106,7 +107,7 @@ class Game2048:
 class Renderer:
     colours = { 
         "default": {
-            "dfont":(119,110,101),
+            "dfont&buttons":(119,110,101),
             "lfont":(249,246,242),
             "gridbg":(184,172,160), 
             "0":(202,192,180), 
@@ -124,7 +125,7 @@ class Renderer:
             "bg":(252,247,241)
         },
         "sea":{
-            "dfont":(43,43,43),
+            "dfont&buttons":(43,43,43),
             "lfont":(232,232,232),
             "gridbg":(194, 210, 236),
             "0":(0,0,0),
@@ -140,24 +141,24 @@ class Renderer:
             "1024":(210, 30, 220),
             "2048":(180, 0, 255),
             "bg":(255,255,255)
-        }
+        },
         "traffic":{
-             "dfont":(10,10,10),
+             "dfont&buttons":(10,10,10),
              "lfont":(255,255,255),
-             "bg":(100,100,100),
+             "gridbg":(100,100,100),
              "0":(0,0,0),
              "2":(255,0,0),
              "4":(255, 50, 0),
              "8":(255, 100, 0),
              "16":(255, 150, 0),
              "32":(255,200,0),
-             "64":(255,255,0),
-             "128":(200,255,0),
+             "64":(235,225,0),
+             "128":(180,235,0),
              "256":(150,255,0),
              "512":(100,255,0),
              "1024":(50,255,0),
              "2048":(0,255,0),
-             "Bottom":(255,255,255)
+             "bg":(255,255,255)
         }
     }
 
@@ -178,7 +179,7 @@ class Renderer:
                 if inttile > 4:
                     text_surface = font.render(str(tile), False, self.colours[self.theme]["lfont"])
                 else:
-                    text_surface = font.render(str(tile), False, self.colours[self.theme]["dfont"])
+                    text_surface = font.render(str(tile), False, self.colours[self.theme]["dfont&buttons"])
                 window.blit(text_surface, (x + 37 - int((tilelen)**2.3), y + 23 + tilelen*2))
             else:
                 pygame.draw.rect(window, self.colours[self.theme]["0"], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
@@ -189,16 +190,21 @@ class Renderer:
 
     def render_score(self, score, window):
         font = pygame.font.SysFont('quicksand', 50)
-        text_surface = font.render("Score: "+str(score), False, self.colours[self.theme]["dfont"])
+        text_surface = font.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
         window.blit(text_surface, (5, self.window_size))
 
     def render_bottom_row(self, score, window):
         pygame.draw.rect(window, self.colours[self.theme]["bg"], (0, self.window_size, self.window_size, BOTTOM_ROW_HEIGHT))
         self.render_score(score, window)
+        self.render_buttons(window)
+    
+    def render_buttons(self, window):
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], (self.window_size-120, self.window_size+(BOTTOM_ROW_HEIGHT*0.2), BUTTON_SIZE, BUTTON_SIZE), border_radius=10)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], (self.window_size-120+BUTTON_SIZE+SPACING, self.window_size+(BOTTOM_ROW_HEIGHT*0.2), BUTTON_SIZE, BUTTON_SIZE), border_radius=10)
 
 def main():
     pygame.init()
-    theme = "default"
+    theme = "traffic"
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
     pygame.display.set_caption('2048')
 
