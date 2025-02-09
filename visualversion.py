@@ -2,6 +2,7 @@
 import pygame
 import sys
 import random
+import time
 from pygame.locals import *
 
 # Constants
@@ -36,6 +37,7 @@ class Game2048:
     def __init__(self):
         self.gamegrid = [" "] * 16
         self.score = 0
+        self.win = False
         for _ in range(2):
             self.spawn_new_tile()
     
@@ -96,13 +98,20 @@ class Game2048:
             for i in range(len(file)):
                 if "m" in file[i]:
                     file[i] = file[i].replace("m", "")
-                    if test == False:
+                    if not test:
                         self.score += int(file[i])
         if not test:
             self.gamegrid = self.construct_new_grid(direction, row_and_column_split[is_column])
         if test is None:
             return self.construct_new_grid(direction, row_and_column_split[is_column])
         return merged if test else (self.gamegrid, self.score)
+    
+    def check_win(self):
+        if "2048" in self.gamegrid and self.win == False: self.win = True
+        return self.win
+    
+    def check_full(self):
+        return all(tile != " " for tile in self.gamegrid) and not any(self.new_merge(direction, test=True) for direction in ["w", "a", "s", "d"])
 
 class Renderer:
     colours = { 
@@ -172,15 +181,15 @@ class Renderer:
         pygame.draw.rect(window, self.colours[self.theme]["gridbg"], (0, 0, self.window_size, self.window_size))
         for tile in gamegrid:
             if tile != " ":
-                inttile = int(tile)
                 tilelen = len(str(tile))
                 font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
                 pygame.draw.rect(window, self.colours[self.theme][str(tile)], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
-                if inttile > 4:
+                if int(tile) > 4:
                     text_surface = font.render(str(tile), False, self.colours[self.theme]["lfont"])
                 else:
                     text_surface = font.render(str(tile), False, self.colours[self.theme]["dfont&buttons"])
-                window.blit(text_surface, (x + 37 - int((tilelen)**2.3), y + 23 + tilelen*2))
+                text_rect = text_surface.get_rect(center=(x+(TILE_SIZE/2), y+(TILE_SIZE/2)))
+                window.blit(text_surface, text_rect)
             else:
                 pygame.draw.rect(window, self.colours[self.theme]["0"], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
             x += TILE_SIZE + SPACING
@@ -191,7 +200,7 @@ class Renderer:
     def render_score(self, score, window):
         font = pygame.font.SysFont('quicksand', 50)
         text_surface = font.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
-        window.blit(text_surface, (5, self.window_size))
+        window.blit(text_surface, (5, self.window_size + (BOTTOM_ROW_HEIGHT - text_surface.get_height())/2))
 
     def render_bottom_row(self, score, window):
         pygame.draw.rect(window, self.colours[self.theme]["bg"], (0, self.window_size, self.window_size, BOTTOM_ROW_HEIGHT))
@@ -206,17 +215,16 @@ def main():
     pygame.init()
     theme = "traffic"
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
+    endscreen = pygame.Surface((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT), pygame.SRCALPHA)
+    endscreen.fill((0,0,0))
     pygame.display.set_caption('2048')
-
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-
-    while True:
+    while not game.check_full():
         window.fill((renderer.colours[theme]["bg"]))
-        allfull = all(tile != " " for tile in game.gamegrid)
-        if allfull:
-            if game.new_merge("w", test=True) or game.new_merge("a", test=True) or game.new_merge("s", test=True) or game.new_merge("d", test=True):
-                allfull = False
+        allfull = game.check_full()
+        if game.check_win():
+            pass
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
@@ -233,6 +241,17 @@ def main():
                         game.spawn_new_tile()
         renderer.render_grid(game.gamegrid, window)
         renderer.render_bottom_row(game.score, window)
+        pygame.display.update()
+    for i in range(50):
+        endscreen.set_alpha(int(i/3))
+        window.blit(endscreen, (0, 0))
+        pygame.display.update()
+        time.sleep(0.05)
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
         pygame.display.update()
 
 if __name__ == "__main__":
