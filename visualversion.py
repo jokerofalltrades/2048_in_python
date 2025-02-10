@@ -10,7 +10,6 @@ WINDOW_SIZE = 430
 TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
-BUTTON_SIZE = 48
 
 class Button():
     def __init__(self, x, y, image, scale):
@@ -197,19 +196,28 @@ class Renderer:
                 x = SPACING
                 y += TILE_SIZE + SPACING
 
-    def render_score(self, score, window):
-        font = pygame.font.SysFont('quicksand', 50)
+    def render_score(self, score, window, font):
         text_surface = font.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
         window.blit(text_surface, (5, self.window_size + (BOTTOM_ROW_HEIGHT - text_surface.get_height())/2))
 
     def render_bottom_row(self, score, window):
+        font = pygame.font.SysFont('quicksand', 40)
         pygame.draw.rect(window, self.colours[self.theme]["bg"], (0, self.window_size, self.window_size, BOTTOM_ROW_HEIGHT))
-        self.render_score(score, window)
+        self.render_score(score, window, font)
         self.render_buttons(window)
     
     def render_buttons(self, window):
-        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], (self.window_size-120, self.window_size+(BOTTOM_ROW_HEIGHT*0.2), BUTTON_SIZE, BUTTON_SIZE), border_radius=10)
-        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], (self.window_size-120+BUTTON_SIZE+SPACING, self.window_size+(BOTTOM_ROW_HEIGHT*0.2), BUTTON_SIZE, BUTTON_SIZE), border_radius=10)
+        font = pygame.font.SysFont('quicksand', 25)
+        settings_text = font.render("Settings", False, self.colours[self.theme]["lfont"])
+        menu_text = font.render("Menu", False, self.colours[self.theme]["lfont"])
+        settings_button = pygame.Rect((self.window_size-(settings_text.get_rect().width+SPACING*6+menu_text.get_rect().width), self.window_size+((BOTTOM_ROW_HEIGHT-settings_text.get_rect().height-SPACING)*0.5), settings_text.get_rect().width+SPACING*2, settings_text.get_rect().height+SPACING))
+        menu_button = pygame.Rect((self.window_size-(menu_text.get_rect().width+SPACING*3), self.window_size+((BOTTOM_ROW_HEIGHT-menu_text.get_rect().height-SPACING)*0.5), menu_text.get_rect().width+SPACING*2, menu_text.get_rect().height+SPACING))
+        settings_rect = settings_text.get_rect(center=settings_button.center)
+        menu_rect = menu_text.get_rect(center=menu_button.center)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], settings_button, border_radius=10)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], menu_button, border_radius=10)
+        window.blit(menu_text, menu_rect)
+        window.blit(settings_text, settings_rect)
 
 def main():
     pygame.init()
