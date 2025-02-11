@@ -173,6 +173,8 @@ class Renderer:
     def __init__(self, window_size, theme):
         self.window_size = window_size
         self.theme = theme
+        self.cachedscore = 1
+        self.cachedsize = 0
 
     def render_grid(self, gamegrid, window):
         x = SPACING
@@ -211,12 +213,22 @@ class Renderer:
         window.blit(menu_text, menu_rect)
         window.blit(settings_text, settings_rect)
         #Rendering Score
-        scorefont = pygame.font.SysFont('quicksand', 40)
-        score_boundbox = pygame.Rect(SPACING, self.window_size+SPACING, (self.window_size-settings_button.width-menu_button.width-SPACING*5), BOTTOM_ROW_HEIGHT-SPACING*2)
-        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], score_boundbox, border_radius=10)
-        score_text = scorefont.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
+        size = 50
+        score_boundbox = pygame.Rect(SPACING, self.window_size+SPACING, (self.window_size-settings_button.width-menu_button.width-SPACING*4), BOTTOM_ROW_HEIGHT-SPACING*2)
+        if score != self.cachedscore:
+            scorefont = pygame.font.SysFont('quicksand', size)
+            score_text = scorefont.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
+            while not score_boundbox.contains(score_text.get_rect(center=score_boundbox.center)):
+                size -= 1
+                scorefont = pygame.font.SysFont('quicksand', size)
+                score_text = scorefont.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
+            self.cachedscore = score
+            self.cachedsize = size
+        else:
+            scorefont = pygame.font.SysFont('quicksand', self.cachedsize)
+            score_text = scorefont.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
         score_rect = score_text.get_rect(center=score_boundbox.center)
-        window.blit(score_text, score_rect.fit(score_boundbox))
+        window.blit(score_text, score_rect)
         
 
 def main():
