@@ -240,6 +240,20 @@ def main():
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
+    gameloop(window, game, renderer, theme)
+    for i in range(50):
+        endscreen.set_alpha(int(i/3))
+        window.blit(endscreen, (0, 0))
+        pygame.display.update()
+        time.sleep(0.05)
+    while True:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+        pygame.display.update()
+
+def gameloop(window, game, renderer, theme):
     while not game.check_full():
         window.fill((renderer.colours[theme]["bg"]))
         allfull = game.check_full()
@@ -261,17 +275,6 @@ def main():
                         game.spawn_new_tile()
         renderer.render_grid(game.gamegrid, window)
         renderer.render_bottom_row(game.score, window)
-        pygame.display.update()
-    for i in range(50):
-        endscreen.set_alpha(int(i/3))
-        window.blit(endscreen, (0, 0))
-        pygame.display.update()
-        time.sleep(0.05)
-    while True:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.exit()
         pygame.display.update()
 
 if __name__ == "__main__":
