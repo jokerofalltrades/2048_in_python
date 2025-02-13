@@ -175,6 +175,11 @@ class Renderer:
         self.theme = theme
         self.cachedscore = 1
         self.cachedsize = 0
+        self.fadescreen = pygame.Surface((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT), pygame.SRCALPHA)
+        self.fadescreen.fill((0,0,0))
+        self.fadescreenactive = 0
+        self.fading = None
+        self.alpha = 0
 
     def render_grid(self, gamegrid, window):
         x = SPACING
@@ -229,28 +234,62 @@ class Renderer:
             score_text = scorefont.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
         score_rect = score_text.get_rect(center=score_boundbox.center)
         window.blit(score_text, score_rect)
+
+    def render_endscreen(self, window):
+        if self.alpha == 0:
+            self.fading = 'OUT'
+        while self.fading == 'OUT':
+            self.update()
+            self.draw_fadescreen(window)
+            time.sleep(0.05)
+            pygame.display.update()
+
+    def remove_endscreen(self, game, window):
+        self.alpha = 50
+        self.fading = 'IN'
+        while self.fading == 'IN':
+            window.fill(self.colours[self.theme]["bg"])
+            self.render_grid(game.gamegrid, window)
+            self.render_bottom_row(game.score, window)
+            self.update()
+            self.draw_fadescreen(window)
+            time.sleep(0.05)
+            pygame.display.update()
+    
+    def draw_fadescreen(self, window):
+        if self.fading:
+            self.fadescreen.set_alpha(self.alpha)
+            window.blit(self.fadescreen, (0, 0))
+
+    def update(self):
+        if self.fading == 'OUT':
+            self.alpha += 2
+            if self.alpha >= 50:
+                self.fading = 'IN'
+        else:
+            self.alpha -= 2
+            if self.alpha <= 0:
+                self.fading = None
         
 
 def main():
     pygame.init()
     theme = "traffic"
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
-    endscreen = pygame.Surface((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT), pygame.SRCALPHA)
-    endscreen.fill((0,0,0))
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-    gameloop(window, game, renderer, theme)
-    for i in range(50):
-        endscreen.set_alpha(int(i/3))
-        window.blit(endscreen, (0, 0))
-        pygame.display.update()
-        time.sleep(0.05)
+    #gameloop(window, game, renderer, theme)
     while True:
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_f:
+                    renderer.remove_endscreen(game, window)
+                if event.key == pygame.K_m:
+                    renderer.render_endscreen(window)
         pygame.display.update()
 
 def gameloop(window, game, renderer, theme):
