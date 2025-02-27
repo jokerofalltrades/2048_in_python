@@ -175,11 +175,6 @@ class Renderer:
         self.theme = theme
         self.cachedscore = 1
         self.cachedsize = 0
-        self.fadescreen = pygame.Surface((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT), pygame.SRCALPHA)
-        self.fadescreen.fill((0,0,0))
-        self.fadescreenactive = 0
-        self.fading = None
-        self.alpha = 0
 
     def render_grid(self, gamegrid, window):
         x = SPACING
@@ -234,6 +229,11 @@ class Renderer:
             score_text = scorefont.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
         score_rect = score_text.get_rect(center=score_boundbox.center)
         window.blit(score_text, score_rect)
+        
+    def winscreen(self, window):
+        pygame.draw.Rect(window, (self.colours[self.theme]["bg"]), 0, 0, window_size, window_size+BOTTOM_ROW_HEIGHT)
+        font = pygame.font.SysFont('quicksand', 50, bold = True)
+        win_text = font.render("You Win!", False, self.colours[self.theme][lfont])
 
 def main():
     pygame.init()
