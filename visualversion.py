@@ -187,7 +187,7 @@ class Renderer:
             if tile != " ":
                 tilelen = len(str(tile))
                 font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
-                if tile <= 2048:
+                if int(tile) <= 2048:
                     pygame.draw.rect(window, self.colours[self.theme][str(tile)], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
                 else:
                     pygame.draw.rect(window, self.colours[self.theme]["4096+"], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
@@ -210,8 +210,8 @@ class Renderer:
         font = pygame.font.SysFont('quicksand', 25)
         settings_text = font.render("Settings", False, self.colours[self.theme]["lfont"])
         menu_text = font.render("Menu", False, self.colours[self.theme]["lfont"])
-        settings_button = pygame.Rect((self.window_size-(settings_text.get_rect().width+SPACING*6+menu_text.get_rect().width), self.window_size+((BOTTOM_ROW_HEIGHT-settings_text.get_rect().height-SPACING)*0.5), settings_text.get_rect().width+SPACING*2, settings_text.get_rect().height+SPACING))
-        menu_button = pygame.Rect((self.window_size-(menu_text.get_rect().width+SPACING*3), self.window_size+((BOTTOM_ROW_HEIGHT-menu_text.get_rect().height-SPACING)*0.5), menu_text.get_rect().width+SPACING*2, menu_text.get_rect().height+SPACING))
+        settings_button = Rect((self.window_size-(settings_text.get_rect().width+SPACING*6+menu_text.get_rect().width), self.window_size+((BOTTOM_ROW_HEIGHT-settings_text.get_rect().height-SPACING)*0.5), settings_text.get_rect().width+SPACING*2, settings_text.get_rect().height+SPACING))
+        menu_button = Rect((self.window_size-(menu_text.get_rect().width+SPACING*3), self.window_size+((BOTTOM_ROW_HEIGHT-menu_text.get_rect().height-SPACING)*0.5), menu_text.get_rect().width+SPACING*2, menu_text.get_rect().height+SPACING))
         settings_rect = settings_text.get_rect(center=settings_button.center)
         menu_rect = menu_text.get_rect(center=menu_button.center)
         pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], settings_button, border_radius=10)
@@ -220,7 +220,7 @@ class Renderer:
         window.blit(settings_text, settings_rect)
         #Rendering Score
         size = 50
-        score_boundbox = pygame.Rect(SPACING, self.window_size+SPACING, (self.window_size-settings_button.width-menu_button.width-SPACING*4), BOTTOM_ROW_HEIGHT-SPACING*2)
+        score_boundbox = Rect(SPACING, self.window_size+SPACING, (self.window_size-settings_button.width-menu_button.width-SPACING*4), BOTTOM_ROW_HEIGHT-SPACING*2)
         if score != self.cachedscore:
             scorefont = pygame.font.SysFont('quicksand', size)
             score_text = scorefont.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
@@ -264,7 +264,7 @@ def main():
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-    #gameloop(window, game, renderer, theme)
+    gameloop(window, game, renderer, theme)
     while True:
       renderer.winscreen(window)
       pygame.display.update()
