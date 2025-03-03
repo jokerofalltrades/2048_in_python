@@ -130,6 +130,7 @@ class Renderer:
             "512":(237,200,80), 
             "1024":(237,197,63), 
             "2048":(237,194,45),
+            "4096+":(50,50,50),
             "bg":(252,247,241)
         },
         "sea":{
@@ -148,6 +149,7 @@ class Renderer:
             "512":(230, 50, 180),
             "1024":(210, 30, 220),
             "2048":(180, 0, 255),
+            "4096+":(50,50,50),
             "bg":(255,255,255)
         },
         "traffic":{
@@ -166,6 +168,7 @@ class Renderer:
              "512":(100,255,0),
              "1024":(50,255,0),
              "2048":(0,255,0),
+             "4096+":(50,50,50),
              "bg":(255,255,255)
         }
     }
@@ -184,7 +187,10 @@ class Renderer:
             if tile != " ":
                 tilelen = len(str(tile))
                 font = pygame.font.SysFont('quicksand', int(40/(tilelen**0.15)), bold=True)
-                pygame.draw.rect(window, self.colours[self.theme][str(tile)], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
+                if tile <= 2048:
+                    pygame.draw.rect(window, self.colours[self.theme][str(tile)], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
+                else:
+                    pygame.draw.rect(window, self.colours[self.theme]["4096+"], (x, y, TILE_SIZE, TILE_SIZE), border_radius=3)
                 if int(tile) > 4:
                     text_surface = font.render(str(tile), False, self.colours[self.theme]["lfont"])
                 else:
@@ -231,9 +237,25 @@ class Renderer:
         window.blit(score_text, score_rect)
         
     def winscreen(self, window):
-        pygame.draw.Rect(window, (self.colours[self.theme]["bg"]), 0, 0, window_size, window_size+BOTTOM_ROW_HEIGHT)
-        font = pygame.font.SysFont('quicksand', 50, bold = True)
-        win_text = font.render("You Win!", False, self.colours[self.theme][lfont])
+        #Text Rendering
+        background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
+        pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
+        font = pygame.font.SysFont('quicksand', 50, bold=True)
+        win_text = font.render("You Win!", False, self.colours[self.theme]["dfont&buttons"])
+        win_text_rect = win_text.get_rect(center=background_rect.center)
+        window.blit(win_text, win_text_rect)
+        #2048 Tile Rendering
+        large_tile_size = int(TILE_SIZE*1.25)
+        font = pygame.font.SysFont('quicksand', 40, bold=True)
+        text_2048 = font.render("2048", False, self.colours[self.theme]["lfont"])
+        tile_rect = Rect((self.window_size-large_tile_size)/2, 60, large_tile_size, large_tile_size)
+        pygame.draw.rect(window, self.colours[self.theme]["gridbg"], ((self.window_size-(large_tile_size+SPACING*2))/2, 50, large_tile_size+SPACING*2, large_tile_size+SPACING*2))
+        pygame.draw.rect(window, self.colours[self.theme]["2048"], tile_rect, border_radius=6)
+        text_rect = text_2048.get_rect(center=tile_rect.center)
+        window.blit(text_2048, text_rect)
+        #Button Rendering
+        
+        
 
 def main():
     pygame.init()
@@ -242,7 +264,10 @@ def main():
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-    gameloop(window, game, renderer, theme)
+    #gameloop(window, game, renderer, theme)
+    while True:
+      renderer.winscreen(window)
+      pygame.display.update()
     #endscreen stuff
 
 def gameloop(window, game, renderer, theme):
