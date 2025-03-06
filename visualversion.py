@@ -236,7 +236,7 @@ class Renderer:
         score_rect = score_text.get_rect(center=score_boundbox.center)
         window.blit(score_text, score_rect)
         
-    def winscreen(self, window):
+    def render_winscreen(self, window):
         #Text Rendering
         background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
         pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
@@ -266,7 +266,7 @@ def main():
     renderer = Renderer(WINDOW_SIZE, theme)
     gameloop(window, game, renderer, theme)
     while True:
-      renderer.winscreen(window)
+      renderer.render_winscreen(window)
       pygame.display.update()
     #endscreen stuff
 
