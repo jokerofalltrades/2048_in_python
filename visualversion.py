@@ -254,17 +254,17 @@ class Renderer:
         text_rect = text_2048.get_rect(center=tile_rect.center)
         window.blit(text_2048, text_rect)
         #Button Rendering
-        font = pygame.font.SysFont('quicksand', 40)
+        font = pygame.font.SysFont('quicksand', 30)
         continue_text = font.render("Continue", False, self.colours[self.theme]["lfont"])
         restart_text = font.render("Restart", False, self.colours[self.theme]["lfont"])
-        settings_button = Rect((self.window_size-())/2, top, width, height)
-        menu_button = Rect((self.window_size-(menu_text.get_rect().width+SPACING*3), self.window_size+((BOTTOM_ROW_HEIGHT-menu_text.get_rect().height-SPACING)*0.5), menu_text.get_rect().width+SPACING*2, menu_text.get_rect().height+SPACING))
-        settings_rect = settings_text.get_rect(center=settings_button.center)
-        menu_rect = menu_text.get_rect(center=menu_button.center)
-        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], settings_button, border_radius=10)
-        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], menu_button, border_radius=10)
-        window.blit(menu_text, menu_rect)
-        window.blit(settings_text, settings_rect)
+        continue_button = Rect((self.window_size-(continue_text.get_rect().width+restart_text.get_rect().width+SPACING*5))/2, background_rect.centery+win_text_rect.height, continue_text.get_rect().width+SPACING*2, continue_text.get_rect().height+SPACING)
+        restart_button = Rect((self.window_size-restart_text.get_rect().width+SPACING+continue_text.get_rect().width)/2, background_rect.centery+win_text_rect.height, restart_text.get_rect().width+SPACING*2, restart_text.get_rect().height+SPACING)
+        continue_rect = continue_text.get_rect(center=continue_button.center)
+        restart_rect = restart_text.get_rect(center=restart_button.center)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], continue_button, border_radius=10)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], restart_button, border_radius=10)
+        window.blit(continue_text, continue_rect)
+        window.blit(restart_text, restart_rect)
         
 
 def main():
@@ -274,10 +274,14 @@ def main():
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-    gameloop(window, game, renderer, theme)
+    #gameloop(window, game, renderer, theme)
     while True:
-      renderer.render_winscreen(window)
-      pygame.display.update()
+        renderer.render_winscreen(window)
+        pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
     #endscreen stuff
 
 def gameloop(window, game, renderer, theme):
