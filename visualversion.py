@@ -247,6 +247,28 @@ class Renderer:
         window.blit(restart_text, restart_rect)
         return continue_button, restart_button
     
+    def render_losescreen(self, window):
+        #Text Rendering
+        background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
+        pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
+        font = pygame.font.SysFont('quicksand', 60, bold=True)
+        lose_text = font.render("You Lose...", False, self.colours[self.theme]["dfont&buttons"])
+        lose_text_rect = lose_text.get_rect(center=background_rect.center)
+        lose_text_rect.y -= 50
+        window.blit(lose_text, lose_text_rect)
+        font = pygame.font.SysFont('quicksand', 35)
+        quit_text = font.render("Quit", False, self.colours[self.theme]["lfont"])
+        restart_text = font.render("Restart", False, self.colours[self.theme]["lfont"])
+        quit_button = Rect((self.window_size-quit_text.get_rect().width+SPACING+restart_text.get_rect().width)/2, background_rect.centery+lose_text_rect.height, quit_text.get_rect().width+SPACING*2, quit_text.get_rect().height+SPACING)
+        restart_button = Rect((self.window_size-(quit_text.get_rect().width+restart_text.get_rect().width+SPACING*5))/2, background_rect.centery+lose_text_rect.height, restart_text.get_rect().width+SPACING*2, restart_text.get_rect().height+SPACING)
+        quit_rect = quit_text.get_rect(center=quit_button.center)
+        restart_rect = restart_text.get_rect(center=restart_button.center)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], quit_button, border_radius=10)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], restart_button, border_radius=10)
+        window.blit(quit_text, quit_rect)
+        window.blit(restart_text, restart_rect)
+        return quit_button, restart_button
+    
     def butt_clicked(self, rect):
         action = False
         pos = pygame.mouse.get_pos()
@@ -284,6 +306,20 @@ def main():
                     if event.type == QUIT:
                         pygame.quit()
                         sys.exit()
+        if result == "lose":
+            while True:
+                quit_butt, rest_butt = renderer.render_losescreen(window)
+                pygame.display.update()
+                if renderer.butt_clicked(quit_butt):
+                    pygame.quit()
+                    sys.exit()
+                if renderer.butt_clicked(rest_butt):
+                    setup = 1
+                    break
+                for event in pygame.event.get():
+                    if event.type == QUIT:
+                        pygame.quit()
+                        sys.exit()
         #endscreen stuff
 
 def gameloop(window, game, renderer, theme):
@@ -309,6 +345,7 @@ def gameloop(window, game, renderer, theme):
         renderer.render_grid(game.gamegrid, window)
         renderer.render_bottom_row(game.score, window)
         pygame.display.update()
+    return "lose"
 
 if __name__ == "__main__":
     main()
