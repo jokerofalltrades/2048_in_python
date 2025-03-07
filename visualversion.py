@@ -11,27 +11,6 @@ TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 
-class Button():
-    def __init__(self, x, y, image, scale):
-        width = image.get_width()
-        height = image.get_height()
-        self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale)))
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
-        self.clicked = False
-
-    def draw(self, surface):
-        action = False
-        pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
-                self.clicked = True
-                action = True
-        if pygame.mouse.get_pressed()[0] == 0:
-            self.clicked = False
-        surface.blit(self.image, (self.rect.x, self.rect.y))
-        return action
-
 class Game2048:
     def __init__(self):
         self.gamegrid = [" "] * 16
@@ -178,6 +157,7 @@ class Renderer:
         self.theme = theme
         self.cachedscore = 1
         self.cachedsize = 0
+        self.clicked = False
 
     def render_grid(self, gamegrid, window):
         x = SPACING
@@ -236,7 +216,7 @@ class Renderer:
         score_rect = score_text.get_rect(center=score_boundbox.center)
         window.blit(score_text, score_rect)
         
-    def render_winscreen(self, window):
+    def render_winscreen(self, window) -> tuple:
         #Text Rendering
         background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
         pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
@@ -265,31 +245,53 @@ class Renderer:
         pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], restart_button, border_radius=10)
         window.blit(continue_text, continue_rect)
         window.blit(restart_text, restart_rect)
+        return continue_button, restart_button
+    
+    def butt_clicked(self, rect):
+        action = False
+        pos = pygame.mouse.get_pos()
+        if rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+                self.clicked = True
+                action = True
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+        return action
         
 
 def main():
     pygame.init()
     theme = "traffic"
+    setup = 1
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
     pygame.display.set_caption('2048')
-    game = Game2048()
-    renderer = Renderer(WINDOW_SIZE, theme)
-    #gameloop(window, game, renderer, theme)
     while True:
-        renderer.render_winscreen(window)
-        pygame.display.update()
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                pygame.quit()
-                sys.exit()
-    #endscreen stuff
+        if setup == 1:
+            game = Game2048()
+            renderer = Renderer(WINDOW_SIZE, theme)
+            setup = 0
+        result = gameloop(window, game, renderer, theme)
+        if result == "win":
+            while True:
+                cont_butt, rest_butt = renderer.render_winscreen(window)
+                pygame.display.update()
+                if renderer.butt_clicked(cont_butt):
+                    break
+                if renderer.butt_clicked(rest_butt):
+                    setup = 1
+                    break
+                for event in pygame.event.get():
+                    if event.type == QUIT:
+                        pygame.quit()
+                        sys.exit()
+        #endscreen stuff
 
 def gameloop(window, game, renderer, theme):
     while not game.check_full():
         window.fill((renderer.colours[theme]["bg"]))
         allfull = game.check_full()
         if game.check_win():
-            pass
+            return "win"
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
