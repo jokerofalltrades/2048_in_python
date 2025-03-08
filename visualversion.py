@@ -2,7 +2,6 @@
 import pygame
 import sys
 import random
-import time
 from pygame.locals import *
 
 # Constants
@@ -11,6 +10,60 @@ TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 
+class OptionBox():
+
+    def __init__(self, x, y, w, h, color, highlight_color, font, option_list, selected = 0):
+        self.color = color
+        self.highlight_color = highlight_color
+        self.rect = pygame.Rect(x, y, w, h)
+        self.font = font
+        self.option_list = option_list
+        self.selected = selected
+        self.draw_menu = False
+        self.menu_active = False
+        self.active_option = -1
+
+    def draw(self, surf):
+        pygame.draw.rect(surf, self.highlight_color if self.menu_active else self.color, self.rect)
+        pygame.draw.rect(surf, (0, 0, 0), self.rect, 2)
+        msg = self.font.render(self.option_list[self.selected], 1, (0, 0, 0))
+        surf.blit(msg, msg.get_rect(center = self.rect.center))
+
+        if self.draw_menu:
+            for i, text in enumerate(self.option_list):
+                rect = self.rect.copy()
+                rect.y += (i+1) * self.rect.height
+                pygame.draw.rect(surf, self.highlight_color if i == self.active_option else self.color, rect)
+                msg = self.font.render(text, 1, (0, 0, 0))
+                surf.blit(msg, msg.get_rect(center = rect.center))
+            outer_rect = (self.rect.x, self.rect.y + self.rect.height, self.rect.width, self.rect.height * len(self.option_list))
+            pygame.draw.rect(surf, (0, 0, 0), outer_rect, 2)
+
+    def update(self, event_list):
+        mpos = pygame.mouse.get_pos()
+        self.menu_active = self.rect.collidepoint(mpos)
+        
+        self.active_option = -1
+        for i in range(len(self.option_list)):
+            rect = self.rect.copy()
+            rect.y += (i+1) * self.rect.height
+            if rect.collidepoint(mpos):
+                self.active_option = i
+                break
+
+        if not self.menu_active and self.active_option == -1:
+            self.draw_menu = False
+
+        for event in event_list:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.menu_active:
+                    self.draw_menu = not self.draw_menu
+                elif self.draw_menu and self.active_option >= 0:
+                    self.selected = self.active_option
+                    self.draw_menu = False
+                    return self.active_option
+        return -1
+    
 class Game2048:
     def __init__(self):
         self.gamegrid = [" "] * 16
@@ -215,6 +268,7 @@ class Renderer:
             score_text = scorefont.render("Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
         score_rect = score_text.get_rect(center=score_boundbox.center)
         window.blit(score_text, score_rect)
+        return settings_button, menu_button
         
     def render_winscreen(self, window) -> tuple:
         #Text Rendering
@@ -257,17 +311,44 @@ class Renderer:
         lose_text_rect.y -= 50
         window.blit(lose_text, lose_text_rect)
         font = pygame.font.SysFont('quicksand', 35)
-        quit_text = font.render("Quit", False, self.colours[self.theme]["lfont"])
+        menu_text = font.render("Menu", False, self.colours[self.theme]["lfont"])
         restart_text = font.render("Restart", False, self.colours[self.theme]["lfont"])
-        quit_button = Rect((self.window_size-quit_text.get_rect().width+SPACING+restart_text.get_rect().width)/2, background_rect.centery+lose_text_rect.height, quit_text.get_rect().width+SPACING*2, quit_text.get_rect().height+SPACING)
-        restart_button = Rect((self.window_size-(quit_text.get_rect().width+restart_text.get_rect().width+SPACING*5))/2, background_rect.centery+lose_text_rect.height, restart_text.get_rect().width+SPACING*2, restart_text.get_rect().height+SPACING)
-        quit_rect = quit_text.get_rect(center=quit_button.center)
+        menu_button = Rect((self.window_size-menu_text.get_rect().width+SPACING+restart_text.get_rect().width)/2, background_rect.centery+lose_text_rect.height, menu_text.get_rect().width+SPACING*2, menu_text.get_rect().height+SPACING)
+        restart_button = Rect((self.window_size-(menu_text.get_rect().width+restart_text.get_rect().width+SPACING*5))/2, background_rect.centery+lose_text_rect.height, restart_text.get_rect().width+SPACING*2, restart_text.get_rect().height+SPACING)
+        menu_rect = menu_text.get_rect(center=menu_button.center)
         restart_rect = restart_text.get_rect(center=restart_button.center)
-        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], quit_button, border_radius=10)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], menu_button, border_radius=10)
         pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], restart_button, border_radius=10)
-        window.blit(quit_text, quit_rect)
+        window.blit(menu_text, menu_rect)
         window.blit(restart_text, restart_rect)
-        return quit_button, restart_button
+        return menu_button, restart_button
+    
+    def render_menu(self, window):
+        background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
+        pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
+        font = pygame.font.SysFont('quicksand', 70, bold=True)
+        title_text = font.render("2048", False, self.colours[self.theme]["dfont&buttons"])
+        title_text_rect = title_text.get_rect(center=background_rect.center)
+        title_text_rect.y -= 100
+        window.blit(title_text, title_text_rect)
+        #Button Rendering
+        font = pygame.font.SysFont('quicksand', 35)
+        play_text = font.render("Play", False, self.colours[self.theme]["lfont"])
+        sett_text = font.render("Settings", False, self.colours[self.theme]["lfont"])
+        quit_text = font.render("Quit", False, self.colours[self.theme]["lfont"])      
+        play_button = Rect((self.window_size-(play_text.get_rect().width+SPACING*2+sett_text.get_rect().width+SPACING*2+quit_text.get_rect().width+SPACING*2+SPACING*2))/2, background_rect.centery+title_text_rect.height, play_text.get_rect().width+SPACING*2, play_text.get_rect().height+SPACING)
+        sett_button = Rect((self.window_size+play_text.get_rect().width+SPACING*2-(sett_text.get_rect().width+SPACING*2+quit_text.get_rect().width+SPACING*2))/2, background_rect.centery+title_text_rect.height, sett_text.get_rect().width+SPACING*2, sett_text.get_rect().height+SPACING)
+        quit_button = Rect((self.window_size+play_text.get_rect().width+sett_text.get_rect().width-quit_text.get_rect().width+SPACING*4)/2, background_rect.centery+title_text_rect.height, quit_text.get_rect().width+SPACING*2, quit_text.get_rect().height+SPACING)
+        play_rect = play_text.get_rect(center=play_button.center)
+        sett_rect = sett_text.get_rect(center=sett_button.center)
+        quit_rect = quit_text.get_rect(center=quit_button.center)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], play_button, border_radius=10)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], sett_button, border_radius=10)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], quit_button, border_radius=10)
+        window.blit(play_text, play_rect)
+        window.blit(sett_text, sett_rect)
+        window.blit(quit_text, quit_rect)
+        return play_button, sett_button, quit_button
     
     def butt_clicked(self, rect):
         action = False
@@ -284,13 +365,29 @@ class Renderer:
 def main():
     pygame.init()
     theme = "traffic"
-    setup = 1
+    setup = 2
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
     pygame.display.set_caption('2048')
+    renderer = Renderer(WINDOW_SIZE, theme)
     while True:
+        if setup == 2:
+            while True:
+                play_butt, sett_butt, quit_butt = renderer.render_menu(window)
+                if renderer.butt_clicked(play_butt):
+                    setup = 1
+                    break
+                if renderer.butt_clicked(sett_butt):
+                    renderer.render_settings()
+                if renderer.butt_clicked(quit_butt):
+                    pygame.quit()
+                    sys.exit()
+                for event in pygame.event.get():
+                    if event.type == QUIT:
+                        pygame.quit()
+                        sys.exit()
+                pygame.display.update()
         if setup == 1:
             game = Game2048()
-            renderer = Renderer(WINDOW_SIZE, theme)
             setup = 0
         result = gameloop(window, game, renderer, theme)
         if result == "win":
@@ -311,8 +408,8 @@ def main():
                 quit_butt, rest_butt = renderer.render_losescreen(window)
                 pygame.display.update()
                 if renderer.butt_clicked(quit_butt):
-                    pygame.quit()
-                    sys.exit()
+                    setup = 2
+                    break
                 if renderer.butt_clicked(rest_butt):
                     setup = 1
                     break
@@ -320,7 +417,21 @@ def main():
                     if event.type == QUIT:
                         pygame.quit()
                         sys.exit()
-        #endscreen stuff
+        if result == "menu":
+            while True:
+                play_butt, sett_butt, quit_butt = renderer.render_menu(window)
+                if renderer.butt_clicked(play_butt):
+                    break
+                if renderer.butt_clicked(sett_butt):
+                    renderer.render_settings()
+                if renderer.butt_clicked(quit_butt):
+                    pygame.quit()
+                    sys.exit()
+                for event in pygame.event.get():
+                    if event.type == QUIT:
+                        pygame.quit()
+                        sys.exit()
+                pygame.display.update()          
 
 def gameloop(window, game, renderer, theme):
     while not game.check_full():
@@ -343,7 +454,11 @@ def gameloop(window, game, renderer, theme):
                         game.gamegrid, game.score = game.new_merge(direction)
                         game.spawn_new_tile()
         renderer.render_grid(game.gamegrid, window)
-        renderer.render_bottom_row(game.score, window)
+        sett_butt, menu_butt  = renderer.render_bottom_row(game.score, window)
+        if renderer.butt_clicked(sett_butt):
+            renderer.render_settings()
+        if renderer.butt_clicked(menu_butt):
+            return "menu"
         pygame.display.update()
     return "lose"
 
