@@ -11,12 +11,12 @@ SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 
 class OptionBox():
-
-    def __init__(self, x, y, w, h, color, highlight_color, font, option_list, selected = 0):
-        self.color = color
-        self.highlight_color = highlight_color
+    def __init__(self, x, y, w, h, colour, highlight_colour, font, font_colour, option_list, selected = 0):
+        self.colour = colour
+        self.highlight_colour = highlight_colour
         self.rect = pygame.Rect(x, y, w, h)
         self.font = font
+        self.font_colour = font_colour
         self.option_list = option_list
         self.selected = selected
         self.draw_menu = False
@@ -24,17 +24,16 @@ class OptionBox():
         self.active_option = -1
 
     def draw(self, surf):
-        pygame.draw.rect(surf, self.highlight_color if self.menu_active else self.color, self.rect)
+        pygame.draw.rect(surf, self.highlight_colour if self.menu_active else self.colour, self.rect)
         pygame.draw.rect(surf, (0, 0, 0), self.rect, 2)
-        msg = self.font.render(self.option_list[self.selected], 1, (0, 0, 0))
+        msg = self.font.render(self.option_list[self.selected], 1, self.font_colour)
         surf.blit(msg, msg.get_rect(center = self.rect.center))
-
         if self.draw_menu:
             for i, text in enumerate(self.option_list):
                 rect = self.rect.copy()
                 rect.y += (i+1) * self.rect.height
-                pygame.draw.rect(surf, self.highlight_color if i == self.active_option else self.color, rect)
-                msg = self.font.render(text, 1, (0, 0, 0))
+                pygame.draw.rect(surf, self.highlight_colour if i == self.active_option else self.colour, rect)
+                msg = self.font.render(text, 1, self.font_colour)
                 surf.blit(msg, msg.get_rect(center = rect.center))
             outer_rect = (self.rect.x, self.rect.y + self.rect.height, self.rect.width, self.rect.height * len(self.option_list))
             pygame.draw.rect(surf, (0, 0, 0), outer_rect, 2)
@@ -42,7 +41,6 @@ class OptionBox():
     def update(self, event_list):
         mpos = pygame.mouse.get_pos()
         self.menu_active = self.rect.collidepoint(mpos)
-        
         self.active_option = -1
         for i in range(len(self.option_list)):
             rect = self.rect.copy()
@@ -50,10 +48,8 @@ class OptionBox():
             if rect.collidepoint(mpos):
                 self.active_option = i
                 break
-
         if not self.menu_active and self.active_option == -1:
             self.draw_menu = False
-
         for event in event_list:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.menu_active:
@@ -146,7 +142,7 @@ class Game2048:
 
 class Renderer:
     colours = { 
-        "default": {
+        "Default": {
             "dfont&buttons":(119,110,101),
             "lfont":(249,246,242),
             "gridbg":(184,172,160), 
@@ -163,9 +159,10 @@ class Renderer:
             "1024":(237,197,63), 
             "2048":(237,194,45),
             "4096+":(50,50,50),
-            "bg":(252,247,241)
+            "bg":(252,247,241),
+            "highlight":(255,255,153)
         },
-        "sea":{
+        "Sea":{
             "dfont&buttons":(43,43,43),
             "lfont":(232,232,232),
             "gridbg":(194, 210, 236),
@@ -182,9 +179,10 @@ class Renderer:
             "1024":(210, 30, 220),
             "2048":(180, 0, 255),
             "4096+":(50,50,50),
-            "bg":(255,255,255)
+            "bg":(255,255,255),
+            "highlight":(255,255,153)
         },
-        "traffic":{
+        "Traffic":{
              "dfont&buttons":(10,10,10),
              "lfont":(255,255,255),
              "gridbg":(100,100,100),
@@ -201,7 +199,8 @@ class Renderer:
              "1024":(50,255,0),
              "2048":(0,255,0),
              "4096+":(50,50,50),
-             "bg":(255,255,255)
+             "bg":(255,255,255),
+             "highlight":(255,255,153)
         }
     }
 
@@ -215,6 +214,7 @@ class Renderer:
     def render_grid(self, gamegrid, window):
         x = SPACING
         y = SPACING
+        window.fill((self.colours[self.theme]["bg"]))
         pygame.draw.rect(window, self.colours[self.theme]["gridbg"], (0, 0, self.window_size, self.window_size))
         for tile in gamegrid:
             if tile != " ":
@@ -326,6 +326,7 @@ class Renderer:
     def render_menu(self, window):
         background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
         pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
+        #Text Rendering
         font = pygame.font.SysFont('quicksand', 70, bold=True)
         title_text = font.render("2048", False, self.colours[self.theme]["dfont&buttons"])
         title_text_rect = title_text.get_rect(center=background_rect.center)
@@ -349,6 +350,14 @@ class Renderer:
         window.blit(sett_text, sett_rect)
         window.blit(quit_text, quit_rect)
         return play_button, sett_button, quit_button
+        
+    def render_settings(self, window, optionbox):
+        themeoptions = OptionBox(115,100,200,75,self.colours[self.theme]["bg"],self.colours[self.theme]["highlight"],pygame.font.SysFont('quicksand', 30, bold=True),self.colours[self.theme]["dfont&buttons"],[themename for themename in self.colours])
+        optionsbutt = Rect(115,100,200,75)
+        background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
+        pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
+        themeoptions.update(pygame.event.get())
+        themeoptions.draw(window)
     
     def butt_clicked(self, rect):
         action = False
@@ -361,10 +370,15 @@ class Renderer:
             self.clicked = False
         return action
         
-
+def checkquit():
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            pygame.quit()
+            sys.exit()
+    
 def main():
     pygame.init()
-    theme = "traffic"
+    theme = "Default"
     setup = 2
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
     pygame.display.set_caption('2048')
@@ -377,19 +391,16 @@ def main():
                     setup = 1
                     break
                 if renderer.butt_clicked(sett_butt):
-                    renderer.render_settings()
+                    renderer.render_settings(window, themeoptions)
                 if renderer.butt_clicked(quit_butt):
                     pygame.quit()
                     sys.exit()
-                for event in pygame.event.get():
-                    if event.type == QUIT:
-                        pygame.quit()
-                        sys.exit()
+                checkquit()
                 pygame.display.update()
         if setup == 1:
             game = Game2048()
             setup = 0
-        result = gameloop(window, game, renderer, theme)
+        result = gameloop(window, game, renderer, OptionBox)
         if result == "win":
             while True:
                 cont_butt, rest_butt = renderer.render_winscreen(window)
@@ -399,10 +410,7 @@ def main():
                 if renderer.butt_clicked(rest_butt):
                     setup = 1
                     break
-                for event in pygame.event.get():
-                    if event.type == QUIT:
-                        pygame.quit()
-                        sys.exit()
+                checkquit()
         if result == "lose":
             while True:
                 quit_butt, rest_butt = renderer.render_losescreen(window)
@@ -413,10 +421,7 @@ def main():
                 if renderer.butt_clicked(rest_butt):
                     setup = 1
                     break
-                for event in pygame.event.get():
-                    if event.type == QUIT:
-                        pygame.quit()
-                        sys.exit()
+                checkquit()
         if result == "menu":
             while True:
                 play_butt, sett_butt, quit_butt = renderer.render_menu(window)
@@ -427,15 +432,11 @@ def main():
                 if renderer.butt_clicked(quit_butt):
                     pygame.quit()
                     sys.exit()
-                for event in pygame.event.get():
-                    if event.type == QUIT:
-                        pygame.quit()
-                        sys.exit()
+                checkquit()
                 pygame.display.update()          
 
-def gameloop(window, game, renderer, theme):
+def gameloop(window, game, renderer, optionbox):
     while not game.check_full():
-        window.fill((renderer.colours[theme]["bg"]))
         allfull = game.check_full()
         if game.check_win():
             return "win"
@@ -456,7 +457,10 @@ def gameloop(window, game, renderer, theme):
         renderer.render_grid(game.gamegrid, window)
         sett_butt, menu_butt  = renderer.render_bottom_row(game.score, window)
         if renderer.butt_clicked(sett_butt):
-            renderer.render_settings()
+            while True:
+                renderer.render_settings(window, optionbox)
+                checkquit()
+                pygame.display.update()
         if renderer.butt_clicked(menu_butt):
             return "menu"
         pygame.display.update()
