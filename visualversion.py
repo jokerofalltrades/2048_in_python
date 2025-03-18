@@ -11,6 +11,7 @@ SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 
 class OptionBox():
+
     def __init__(self, x, y, w, h, colour, highlight_colour, font, font_colour, option_list, selected = 0):
         self.colour = colour
         self.highlight_colour = highlight_colour
@@ -28,6 +29,7 @@ class OptionBox():
         pygame.draw.rect(surf, (0, 0, 0), self.rect, 2)
         msg = self.font.render(self.option_list[self.selected], 1, self.font_colour)
         surf.blit(msg, msg.get_rect(center = self.rect.center))
+
         if self.draw_menu:
             for i, text in enumerate(self.option_list):
                 rect = self.rect.copy()
@@ -40,7 +42,7 @@ class OptionBox():
 
     def update(self, event_list):
         mpos = pygame.mouse.get_pos()
-        self.menu_active = self.rect.collidepoint(mpos)
+        self.menu_active = self.rect.collidepoint(mpos)   
         self.active_option = -1
         for i in range(len(self.option_list)):
             rect = self.rect.copy()
@@ -210,6 +212,7 @@ class Renderer:
         self.cachedscore = 1
         self.cachedsize = 0
         self.clicked = False
+        self.themeoptions = OptionBox(115,100,200,75,self.colours[self.theme]["bg"],self.colours[self.theme]["highlight"],pygame.font.SysFont('quicksand', 30, bold=True),self.colours[self.theme]["dfont&buttons"],[themename for themename in self.colours])
 
     def render_grid(self, gamegrid, window):
         x = SPACING
@@ -351,13 +354,11 @@ class Renderer:
         window.blit(quit_text, quit_rect)
         return play_button, sett_button, quit_button
         
-    def render_settings(self, window, optionbox):
-        themeoptions = OptionBox(115,100,200,75,self.colours[self.theme]["bg"],self.colours[self.theme]["highlight"],pygame.font.SysFont('quicksand', 30, bold=True),self.colours[self.theme]["dfont&buttons"],[themename for themename in self.colours])
-        optionsbutt = Rect(115,100,200,75)
+    def render_settings(self, window):
         background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
         pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
-        themeoptions.update(pygame.event.get())
-        themeoptions.draw(window)
+        self.themeoptions.update(pygame.event.get())
+        self.themeoptions.draw(window)
     
     def butt_clicked(self, rect):
         action = False
@@ -391,7 +392,10 @@ def main():
                     setup = 1
                     break
                 if renderer.butt_clicked(sett_butt):
-                    renderer.render_settings(window, themeoptions)
+                    while True:
+                        renderer.render_settings(window)
+                        checkquit()
+                        pygame.display.update()
                 if renderer.butt_clicked(quit_butt):
                     pygame.quit()
                     sys.exit()
@@ -400,7 +404,7 @@ def main():
         if setup == 1:
             game = Game2048()
             setup = 0
-        result = gameloop(window, game, renderer, OptionBox)
+        result = gameloop(window, game, renderer)
         if result == "win":
             while True:
                 cont_butt, rest_butt = renderer.render_winscreen(window)
@@ -435,7 +439,7 @@ def main():
                 checkquit()
                 pygame.display.update()          
 
-def gameloop(window, game, renderer, optionbox):
+def gameloop(window, game, renderer):
     while not game.check_full():
         allfull = game.check_full()
         if game.check_win():
@@ -458,7 +462,7 @@ def gameloop(window, game, renderer, optionbox):
         sett_butt, menu_butt  = renderer.render_bottom_row(game.score, window)
         if renderer.butt_clicked(sett_butt):
             while True:
-                renderer.render_settings(window, optionbox)
+                renderer.render_settings(window)
                 checkquit()
                 pygame.display.update()
         if renderer.butt_clicked(menu_butt):
