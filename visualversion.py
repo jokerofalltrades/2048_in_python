@@ -63,18 +63,19 @@ class OptionBox():
     
 class Game2048:
     def __init__(self):
-        self.gamegrid = [" "] * 16
+        self.gridsize = 16
+        self.gamegrid = [" "] * self.gridsize
         self.score = 0
         self.win = False
         for _ in range(2):
             self.spawn_new_tile()
     
     def spawn_new_tile(self):
-        highest_tile = 2
+        highest_tile = max([int(tile) for tile in self.gamegrid if tile != " "]) if any(tile != " " for tile in self.gamegrid) else 2
         empty_tiles = [i for i, tile in enumerate(self.gamegrid) if tile == " "]
         if empty_tiles:
             index = random.choice(empty_tiles)
-            self.gamegrid[index] = str(2 ** random.randint(1, 2)) if highest_tile >= 4 else "2"
+            self.gamegrid[index] = str(4 if random.randint(1, 4) == 1 else 2) if highest_tile >= 4 else "2"
 
     def row_and_column_splitting(self):
         row_and_column_split = [[[], [], [], []], [[], [], [], []]]
@@ -86,7 +87,7 @@ class Game2048:
 
     def construct_new_grid(self, direction, file_split):
         rowcolumnmatrix = [4, 1] if direction in ["a", "d"] else [1, 4]
-        grid = [" " for _ in range(16)]
+        grid = [" " for _ in range(self.gridsize)]
         if direction in ["a","w"]:
             for i in range(4):
                 for j in range(len(file_split[i])):
