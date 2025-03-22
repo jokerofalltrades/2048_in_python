@@ -21,6 +21,7 @@ class OptionBox():
         self.selected = selected
         self.draw_menu = False
         self.menu_active = False
+        self.clicked = False
         self.active_option = -1
 
     def draw(self, surf):
@@ -39,7 +40,7 @@ class OptionBox():
             outer_rect = (self.rect.x, self.rect.y + self.rect.height, self.rect.width, self.rect.height * len(self.option_list))
             pygame.draw.rect(surf, (0, 0, 0), outer_rect, 2)
 
-    def update(self, event_list):
+    def update(self):
         mpos = pygame.mouse.get_pos()
         self.menu_active = self.rect.collidepoint(mpos)   
         self.active_option = -1
@@ -51,14 +52,16 @@ class OptionBox():
                 break
         if not self.menu_active and self.active_option == -1:
             self.draw_menu = False
-        for event in event_list:
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.menu_active:
-                    self.draw_menu = not self.draw_menu
-                elif self.draw_menu and self.active_option >= 0:
-                    self.selected = self.active_option
-                    self.draw_menu = False
-                    return self.active_option
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+        if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+            self.clicked = True
+            if self.menu_active:
+                self.draw_menu = not self.draw_menu
+            elif self.draw_menu and self.active_option >= 0:
+                self.selected = self.active_option
+                self.draw_menu = False
+                return self.active_option
         return -1
     
 class Game2048:
@@ -354,7 +357,7 @@ class Renderer:
     def render_settings(self, window):
         background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
         pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
-        self.selectoption = self.themeoptions.update(pygame.event.get())
+        self.selectoption = self.themeoptions.update()
         if self.selectoption != -1: self.theme = self.themelist[self.selectoption]
         if self.themeoptions.colour != self.colours[self.theme]["bg"]: self.create_option_box(self.selectoption)
         self.themeoptions.draw(window)
