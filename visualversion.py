@@ -212,8 +212,11 @@ class Renderer:
         self.cachedsize = 0
         self.clicked = False
         self.themelist = [themename for themename in self.colours]
-        self.themeoptions = OptionBox(115,100,200,75,self.colours[self.theme]["bg"],self.colours[self.theme]["highlight"],pygame.font.SysFont('quicksand', 30, bold=True),self.colours[self.theme]["dfont&buttons"],self.themelist)
+        self.create_option_box()
 
+    def create_option_box(self, selected=0):
+        self.themeoptions = OptionBox(115,100,200,75,self.colours[self.theme]["bg"],self.colours[self.theme]["highlight"],pygame.font.SysFont('quicksand', 30, bold=True),self.colours[self.theme]["dfont&buttons"],self.themelist,selected)
+    
     def render_grid(self, gamegrid, window):
         x = SPACING
         y = SPACING
@@ -357,8 +360,9 @@ class Renderer:
     def render_settings(self, window):
         background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
         pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
-        selectoption = self.themeoptions.update(pygame.event.get())
-        if selectoption != -1: self.theme = self.themelist[selectoption]
+        self.selectoption = self.themeoptions.update(pygame.event.get())
+        if self.selectoption != -1: self.theme = self.themelist[self.selectoption]
+        if self.themeoptions.colour != self.colours[self.theme]["bg"]: self.create_option_box(self.selectoption)
         self.themeoptions.draw(window)
     
     def butt_clicked(self, rect):
