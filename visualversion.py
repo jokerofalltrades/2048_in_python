@@ -85,23 +85,16 @@ class Game2048:
         return row_and_column_split
 
     def construct_new_grid(self, direction, file_split):
+        rowcolumnmatrix = [4, 1] if direction in ["a", "d"] else [1, 4]
         grid = [" " for _ in range(16)]
-        if direction == "a":
+        if direction in ["a","w"]:
             for i in range(4):
                 for j in range(len(file_split[i])):
-                    grid[i * 4 + j] = file_split[i][j]
-        elif direction == "d":
+                    grid[i * rowcolumnmatrix[0] + j * rowcolumnmatrix[1]] = file_split[i][j]
+        elif direction in ["d","s"]:
             for i in range(4):
                 for j in range(len(file_split[i])):
-                    grid[i * 4 + (3 - j)] = file_split[i][len(file_split[i]) - j - 1]
-        elif direction == "w":
-            for i in range(4):
-                for j in range(len(file_split[i])):
-                    grid[i + j * 4] = file_split[i][j]
-        elif direction == "s":
-            for i in range(4):
-                for j in range(len(file_split[i])):
-                    grid[i + (3 - j) * 4] = file_split[i][len(file_split[i]) - j - 1]
+                    grid[i * rowcolumnmatrix[0] + (3 - j) * rowcolumnmatrix[1]] = file_split[i][len(file_split[i]) - j - 1]
         return grid
 
     def new_merge(self, direction, test=False):
