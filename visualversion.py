@@ -29,7 +29,6 @@ class OptionBox():
         pygame.draw.rect(surf, (0, 0, 0), self.rect, 2)
         msg = self.font.render(self.option_list[self.selected], 1, self.font_colour)
         surf.blit(msg, msg.get_rect(center = self.rect.center))
-
         if self.draw_menu:
             for i, text in enumerate(self.option_list):
                 rect = self.rect.copy()
@@ -199,6 +198,46 @@ class Renderer:
              "4096+":(50,50,50),
              "bg":(255,255,255),
              "highlight":(255,255,153)
+        },
+        "Disco":{
+             "dfont&buttons":(20,20,10),
+             "lfont":(255,255,180),
+             "gridbg":(100,100,100),
+             "0":(0,0,0),
+             "2":(194,10,169),
+             "4":(83, 50, 200),
+             "8":(206, 166, 66),
+             "16":(99, 0, 0),
+             "32":(87,222,222),
+             "64":(35,225,20),
+             "128":(38,235,100),
+             "256":(150,77,100),
+             "512":(100,255,140),
+             "1024":(50,255,222),
+             "2048":(20,55,39),
+             "4096+":(50,50,50),
+             "bg":(204,175,96),
+             "highlight":(255,255,153)
+        },
+        "Blurple":{
+             "dfont&buttons":(0,0,0),
+             "lfont":(240,240,240),
+             "gridbg":(69,69,69),
+             "0":(0,0,0),
+             "2":(75,150,255),
+             "4":(0,125,255),
+             "8":(50,0,250),
+             "16":(100, 0, 250),
+             "32":(75,0,200),
+             "64":(75,25,100),
+             "128":(50,50,50),
+             "256":(75,50,75),
+             "512":(100,50,100),
+             "1024":(100,0,150),
+             "2048":(150,10,250),
+             "4096+":(0,0,0),
+             "bg":(125,75,200),
+             "highlight":(240,240,240)
         }
     }
 
@@ -212,7 +251,7 @@ class Renderer:
         self.create_option_box()
 
     def create_option_box(self, selected=0):
-        self.themeoptions = OptionBox(115,175,200,75,self.colours[self.theme]["bg"],self.colours[self.theme]["highlight"],pygame.font.SysFont('quicksand', 30, bold=True),self.colours[self.theme]["dfont&buttons"],self.themelist,selected)
+        self.themeoptions = OptionBox(115,175,200,250//len(self.themelist),self.colours[self.theme]["bg"],self.colours[self.theme]["highlight"],pygame.font.SysFont('quicksand', 30, bold=True),self.colours[self.theme]["dfont&buttons"],self.themelist,selected)
     
     def render_grid(self, gamegrid, window):
         x = SPACING
