@@ -209,7 +209,7 @@ class Renderer:
         self.create_option_box()
 
     def create_option_box(self, selected=0):
-        self.themeoptions = OptionBox(115,100,200,75,self.colours[self.theme]["bg"],self.colours[self.theme]["highlight"],pygame.font.SysFont('quicksand', 30, bold=True),self.colours[self.theme]["dfont&buttons"],self.themelist,selected)
+        self.themeoptions = OptionBox(115,175,200,75,self.colours[self.theme]["bg"],self.colours[self.theme]["highlight"],pygame.font.SysFont('quicksand', 30, bold=True),self.colours[self.theme]["dfont&buttons"],self.themelist,selected)
     
     def render_grid(self, gamegrid, window):
         x = SPACING
@@ -358,6 +358,24 @@ class Renderer:
         if self.selectoption != -1: self.theme = self.themelist[self.selectoption]
         if self.themeoptions.colour != self.colours[self.theme]["bg"]: self.create_option_box(self.selectoption)
         self.themeoptions.draw(window)
+        #Text Rendering
+        font = pygame.font.SysFont('quicksand', 60, bold=True)
+        title_text = font.render("Settings:", False, self.colours[self.theme]["dfont&buttons"])
+        title_text_rect = title_text.get_rect(center=background_rect.center)
+        title_text_rect.y = 0
+        window.blit(title_text, title_text_rect)
+        font = pygame.font.SysFont('quicksand', 40, bold=True)
+        themes_text = font.render("Themes:", False, self.colours[self.theme]["dfont&buttons"])
+        themes_text_rect = themes_text.get_rect(center=(background_rect.centerx, background_rect.centery-110))
+        window.blit(themes_text, themes_text_rect)
+        #Button Rendering
+        font = pygame.font.SysFont('quicksand', 35)
+        back_text = font.render("X", False, self.colours[self.theme]["lfont"])
+        back_button = Rect(WINDOW_SIZE-SPACING*2-back_text.get_rect().height, SPACING, back_text.get_rect().height + SPACING, back_text.get_rect().height + SPACING)
+        back_rect = back_text.get_rect(center=back_button.center)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], back_button, border_radius=10)
+        window.blit(back_text, back_rect)
+        return back_button
     
     def butt_clicked(self, rect):
         action = False
@@ -392,7 +410,8 @@ def main():
                     break
                 if renderer.butt_clicked(sett_butt):
                     while True:
-                        renderer.render_settings(window)
+                        back_butt = renderer.render_settings(window)
+                        if renderer.butt_clicked(back_butt): break
                         checkquit()
                         pygame.display.update()
                 if renderer.butt_clicked(quit_butt):
@@ -408,8 +427,7 @@ def main():
             while True:
                 cont_butt, rest_butt = renderer.render_winscreen(window)
                 pygame.display.update()
-                if renderer.butt_clicked(cont_butt):
-                    break
+                if renderer.butt_clicked(cont_butt): break
                 if renderer.butt_clicked(rest_butt):
                     setup = 1
                     break
@@ -428,10 +446,13 @@ def main():
         if result == "menu":
             while True:
                 play_butt, sett_butt, quit_butt = renderer.render_menu(window)
-                if renderer.butt_clicked(play_butt):
-                    break
+                if renderer.butt_clicked(play_butt): break
                 if renderer.butt_clicked(sett_butt):
-                    renderer.render_settings()
+                    while True:
+                        back_butt = renderer.render_settings(window)
+                        if renderer.butt_clicked(back_butt): break
+                        checkquit()
+                        pygame.display.update()
                 if renderer.butt_clicked(quit_butt):
                     pygame.quit()
                     sys.exit()
@@ -458,14 +479,14 @@ def gameloop(window, game, renderer):
                         game.gamegrid, game.score = game.new_merge(direction)
                         game.spawn_new_tile()
         renderer.render_grid(game.gamegrid, window)
-        sett_butt, menu_butt  = renderer.render_bottom_row(game.score, window)
+        sett_butt, menu_butt = renderer.render_bottom_row(game.score, window)
         if renderer.butt_clicked(sett_butt):
             while True:
-                renderer.render_settings(window)
+                back_butt = renderer.render_settings(window)
+                if renderer.butt_clicked(back_butt): break
                 checkquit()
                 pygame.display.update()
-        if renderer.butt_clicked(menu_butt):
-            return "menu"
+        if renderer.butt_clicked(menu_butt): return "menu"
         pygame.display.update()
     return "lose"
 
