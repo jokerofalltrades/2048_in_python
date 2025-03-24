@@ -10,7 +10,7 @@ TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 
-class OptionBox():
+class OptionBox:
     def __init__(self, x, y, w, h, colour, highlight_colour, font, font_colour, option_list, selected = 0):
         self.colour = colour
         self.highlight_colour = highlight_colour
