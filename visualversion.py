@@ -10,6 +10,7 @@ TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 AI_DEPTH = 6
+RANDOM_LIST = random.sample(range(0, 10000), 10000)
 
 class AI:
     def __init__(self, game):
@@ -91,7 +92,6 @@ class Game2048:
         self.score = 0
         self.win = False
         self.moves = 0
-        self.randomlist = random.sample(range(0, 10000), 10000)
         for _ in range(2):
             self.spawn_new_tile()
     
@@ -99,8 +99,8 @@ class Game2048:
         highest_tile = max([int(tile) for tile in self.gamegrid if tile != " "]) if any(tile != " " for tile in self.gamegrid) else 2
         empty_tiles = [i for i, tile in enumerate(self.gamegrid) if tile == " "]
         if empty_tiles:
-            index = empty_tiles[self.randomlist[self.moves%10000] % len(empty_tiles)]
-            self.gamegrid[index] = str(4 if self.randomlist[self.moves%10000]%4 == 0 else 2) if highest_tile >= 4 else "2"
+            index = empty_tiles[RANDOM_LIST[self.moves%10000] % len(empty_tiles)]
+            self.gamegrid[index] = str(4 if RANDOM_LIST[self.moves%10000]%4 == 0 else 2) if highest_tile >= 4 else "2"
 
     def row_and_column_splitting(self):
         row_and_column_split = [[[], [], [], []], [[], [], [], []]]
