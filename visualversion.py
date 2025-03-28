@@ -16,6 +16,13 @@ class AI:
     def __init__(self, game):
         self.game = game
         self.depth = AI_DEPTH
+        self.state = False
+
+    def get_set_state(self, state=None):
+        if state:
+            self.state = state
+        else:
+            return self.state
 
     def generate_sequence(self):
         sequences = {}
