@@ -9,6 +9,27 @@ WINDOW_SIZE = 430
 TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
+AI_DEPTH = 6
+
+class AI:
+    def __init__(self, game):
+        self.game = game
+        self.depth = AI_DEPTH
+
+    def generate_sequence(self):
+        sequences = {}
+        options = ["w", "a", "s", "d"]
+        for i in range(4**self.depth):
+            sequence = []
+            for _ in range(self.depth):
+                sequence.append(options[i % 4])
+                i //= 4
+            sequences["".join(sequence)] = 0
+        return sequences
+    
+    def evaluate_sequence(self, sequence):
+        pass
+
 
 class OptionBox:
     def __init__(self, x, y, w, h, colour, highlight_colour, font, font_colour, option_list, selected = 0):
@@ -69,6 +90,8 @@ class Game2048:
         self.gamegrid = [" "] * self.gridsize
         self.score = 0
         self.win = False
+        self.moves = 0
+        self.randomlist = random.sample(range(0, 10000), 10000)
         for _ in range(2):
             self.spawn_new_tile()
     
@@ -76,8 +99,8 @@ class Game2048:
         highest_tile = max([int(tile) for tile in self.gamegrid if tile != " "]) if any(tile != " " for tile in self.gamegrid) else 2
         empty_tiles = [i for i, tile in enumerate(self.gamegrid) if tile == " "]
         if empty_tiles:
-            index = random.choice(empty_tiles)
-            self.gamegrid[index] = str(4 if random.randint(1, 4) == 1 else 2) if highest_tile >= 4 else "2"
+            index = empty_tiles[self.randomlist[self.moves%10000] % len(empty_tiles)]
+            self.gamegrid[index] = str(4 if self.randomlist[self.moves%10000]%4 == 0 else 2) if highest_tile >= 4 else "2"
 
     def row_and_column_splitting(self):
         row_and_column_split = [[[], [], [], []], [[], [], [], []]]
@@ -126,6 +149,7 @@ class Game2048:
                         self.score += int(file[i])
         if not test:
             self.gamegrid = self.construct_new_grid(direction, row_and_column_split[is_column])
+            self.moves += 1
         if test is None:
             return self.construct_new_grid(direction, row_and_column_split[is_column])
         return merged if test else (self.gamegrid, self.score)
