@@ -24,20 +24,41 @@ class AI:
         else:
             return self.state
 
-    def generate_sequence(self):
-        sequences = {}
+    def generate_sequences(self):
+        self.sequences = {}
         options = ["w", "a", "s", "d"]
         for i in range(4**self.depth):
             sequence = []
             for _ in range(self.depth):
                 sequence.append(options[i % 4])
                 i //= 4
-            sequences["".join(sequence)] = 0
-        return sequences
+            self.sequences["".join(sequence)] = 0
     
-    def evaluate_sequence(self, sequence):
-        pass
-
+    def evaluate_sequences(self, game):
+        # A Sequences score is defined as:
+        # The Current Score
+        # Minus the (tiles on the board - 12) * 50
+        # Add 100 if the largest value tile is in the corner (after move 10 only)
+        # Set Score to minus 1000 if the game is over.
+        generate_sequences()
+        self.cachedmoves = game.moves
+        self.cachedgrid = game.gamegrid
+        self.cachedscore = game.score
+        for sequence in self.sequences:
+            game.gamegrid = self.cachedgrid
+            game.moves = self.cachedmoves
+            game.score = self.cachedscore
+            for move in sequence:
+                if game.check_full():
+                    self.sequences[sequence] = -1000
+                    break
+                geme.new_merge(move)
+                game.spawn_new_tile()
+            tilebonus = (4-len([i for i, tile in enumerate(self.gamegrid) if tile == " "]))*50 if len([i for i, tile in enumerate(self.gamegrid) if tile == " "]) < 4: else 0
+`           cornerbonus = 100 if max(game.gamegrid) in [game.gamegrid[0],game.gamegrid[3],game.gamegrid[12],game.gamegrid[15]] else 0
+            if self.sequences[sequence] == 0:
+                self.sequences[sequence] = game.score - tilebonus + cornerbonus
+        return list(mydict.keys())[list(mydict.values()).index(max(self.sequences.values())]
 
 class OptionBox:
     def __init__(self, x, y, w, h, colour, highlight_colour, font, font_colour, option_list, selected = 0):
