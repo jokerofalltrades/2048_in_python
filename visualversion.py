@@ -12,7 +12,6 @@ WINDOW_SIZE = 430
 TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
-AI_DEPTH = 5
 RANDOM_LIST = random.sample(range(0, 10000), 10000)
 
 class LearningAI:
@@ -58,10 +57,14 @@ class LearningAI:
         max_next_q = max(self.q_table[next_state].values())
         self.q_table[state][action] += self.alpha * (reward + self.gamma * max_next_q - self.q_table[state][action])
 
-    def save_q_table(self, filename="q_table.pkl"):
+    def save_q_table(self, filepath="/home/daniel/Github&Coding/2048_in_python/q_table.pkl"):
         """Save the Q-table to a file."""
-        with open(filename, "wb") as f:
-            pickle.dump(self.q_table, f)
+        try:
+            with open(filepath, "wb") as f:
+                pickle.dump(self.q_table, f)
+            print(f"Q-table successfully saved to {filepath}")
+        except Exception as e:
+            print(f"Error saving Q-table: {e}")
 
     def load_q_table(self, filename="q_table.pkl"):
         """Load the Q-table from a file."""
@@ -84,66 +87,6 @@ class LearningAI:
         self.update_q_table(state, action, reward, next_state)
         return action
 
-
-class AI:
-    def __init__(self, game):
-        self.game = game
-        self.depth = AI_DEPTH
-        self.state = False
-
-    def get_set_state(self, state=None):
-        if state:
-            self.state = state
-        else:
-            return self.state
-
-    def generate_sequences(self):
-        self.sequences = {}
-        options = ["w", "a", "s", "d"]
-        for i in range(4**self.depth):
-            sequence = []
-            for _ in range(self.depth):
-                sequence.append(options[i % 4])
-                i //= 4
-            self.sequences["".join(sequence)] = 0
-    
-    def evaluate_sequences(self, game):
-        # A Sequences score is defined as:
-        # The Current Score
-        # Minus the (tiles on the board - 12) * 50
-        # Add 100 if the largest value tile is in the corner (after move 10 only)
-        # Set Score to minus 1000 if the game is over.
-        self.cachedmoves = game.moves
-        self.cachedgrid = game.gamegrid
-        self.cachedscore = game.score
-        self.generate_sequences()
-        for sequence in self.sequences:
-            self.points = 0
-            for move in sequence:
-                startscore = game.score
-                if game.check_full():
-                    self.sequences[sequence] = -1000
-                    break
-                if game.new_merge(move, test=None) != game.gamegrid:
-                    game.new_merge(move)
-                    game.spawn_new_tile()
-                else:
-                    self.sequences[sequence] = -1000
-                    break
-                self.points += (game.score - startscore) * (self.cachedmoves - game.moves + self.depth)
-            self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game.gamegrid]
-            tilebonus = (6-len([i for i, tile in enumerate(self.intgamemgrid) if tile == " "]))*100 if len([i for i, tile in enumerate(self.intgamemgrid) if tile == " "]) < 6 else 0
-            valid_moves = sum(1 for direction in ["w", "a", "s", "d"] if game.new_merge(direction, test=True))*50
-            cornerbonus = int(max(self.intgamemgrid))**1.5 if max(self.intgamemgrid) in [self.intgamemgrid[0],self.intgamemgrid[3],self.intgamemgrid[12],self.intgamemgrid[15]] and game.moves > 10 else 0
-            if self.sequences[sequence] == 0:
-                self.sequences[sequence] = self.points - tilebonus + cornerbonus + valid_moves
-            game.gamegrid = self.cachedgrid
-            game.moves = self.cachedmoves
-            game.score = self.cachedscore
-        return list(self.sequences.keys())[list(self.sequences.values()).index(max(self.sequences.values()))]
-    
-    def make_move(self, game):
-        game.new_merge(self.evaluate_sequences(game)[0])
 
 class OptionBox:
     def __init__(self, x, y, w, h, colour, highlight_colour, font, font_colour, option_list, selected = 0):
@@ -583,7 +526,7 @@ def main():
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-    ai = LearningAI(game)
+    ai = LearningAI(game, alpha=0.1, gamma=0.9, epsilon=0.1)
     ai.load_q_table()
     while True:
         if setup == 2:
@@ -619,6 +562,10 @@ def main():
                 checkquit()
         if result == "lose":
             while True:
+                if ai.enabled:
+                    ai.save_q_table()
+                    setup = 1
+                    break
                 quit_butt, rest_butt = renderer.render_losescreen(window)
                 pygame.display.update()
                 if renderer.butt_clicked(quit_butt):
@@ -627,6 +574,10 @@ def main():
                 if renderer.butt_clicked(rest_butt):
                     setup = 1
                     break
+                for event in pygame.event.get():
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_s:
+                            ai.save_q_table()
                 checkquit()
         if result == "menu":
             while True:
