@@ -2,6 +2,9 @@
 import pygame
 import sys
 import random
+import time
+import numpy as np
+import pickle
 from pygame.locals import *
 
 # Constants
@@ -9,8 +12,78 @@ WINDOW_SIZE = 430
 TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
-AI_DEPTH = 6
+AI_DEPTH = 5
 RANDOM_LIST = random.sample(range(0, 10000), 10000)
+
+class LearningAI:
+    def __init__(self, game, alpha=0.1, gamma=0.9, epsilon=0.1):
+        self.game = game
+        self.alpha = alpha  # Learning rate
+        self.gamma = gamma  # Discount factor
+        self.epsilon = epsilon  # Exploration rate
+        self.q_table = {}  # Q-table to store state-action values
+        self.enabled = False
+    
+    def enable(self):
+        """Enable the AI."""
+        self.enabled = True
+    
+    def disable(self):
+        """Disable the AI."""
+        self.enabled = False
+
+    def get_state(self):
+        """Convert the game grid into a tuple to use as a state."""
+        return tuple(self.game.gamegrid)
+
+    def choose_action(self, state):
+        """Choose an action using epsilon-greedy strategy."""
+        if random.random() < self.epsilon:
+            # Explore: Choose a random action
+            return random.choice(["w", "a", "s", "d"])
+        else:
+            # Exploit: Choose the action with the highest Q-value
+            if state not in self.q_table:
+                self.q_table[state] = {action: 0 for action in ["w", "a", "s", "d"]}
+            return max(self.q_table[state], key=self.q_table[state].get)
+
+    def update_q_table(self, state, action, reward, next_state):
+        """Update the Q-value for the given state-action pair."""
+        if state not in self.q_table:
+            self.q_table[state] = {action: 0 for action in ["w", "a", "s", "d"]}
+        if next_state not in self.q_table:
+            self.q_table[next_state] = {action: 0 for action in ["w", "a", "s", "d"]}
+        
+        # Bellman equation
+        max_next_q = max(self.q_table[next_state].values())
+        self.q_table[state][action] += self.alpha * (reward + self.gamma * max_next_q - self.q_table[state][action])
+
+    def save_q_table(self, filename="q_table.pkl"):
+        """Save the Q-table to a file."""
+        with open(filename, "wb") as f:
+            pickle.dump(self.q_table, f)
+
+    def load_q_table(self, filename="q_table.pkl"):
+        """Load the Q-table from a file."""
+        try:
+            with open(filename, "rb") as f:
+                self.q_table = pickle.load(f)
+        except FileNotFoundError:
+            self.q_table = {}
+
+    def make_move(self):
+        """Make a move based on the current state."""
+        state = self.get_state()
+        action = self.choose_action(state)
+        next_grid, reward = self.game.new_merge(action, test=None), 0
+        if next_grid != self.game.gamegrid:
+            self.game.new_merge(action)
+            self.game.spawn_new_tile()
+            reward = self.game.score - reward  # Reward is the score increase
+        next_state = self.get_state()
+        self.update_q_table(state, action, reward, next_state)
+        return action
+
 
 class AI:
     def __init__(self, game):
@@ -40,25 +113,37 @@ class AI:
         # Minus the (tiles on the board - 12) * 50
         # Add 100 if the largest value tile is in the corner (after move 10 only)
         # Set Score to minus 1000 if the game is over.
-        generate_sequences()
         self.cachedmoves = game.moves
         self.cachedgrid = game.gamegrid
         self.cachedscore = game.score
+        self.generate_sequences()
         for sequence in self.sequences:
-            game.gamegrid = self.cachedgrid
-            game.moves = self.cachedmoves
-            game.score = self.cachedscore
+            self.points = 0
             for move in sequence:
+                startscore = game.score
                 if game.check_full():
                     self.sequences[sequence] = -1000
                     break
-                geme.new_merge(move)
-                game.spawn_new_tile()
-            tilebonus = (4-len([i for i, tile in enumerate(self.gamegrid) if tile == " "]))*50 if len([i for i, tile in enumerate(self.gamegrid) if tile == " "]) < 4: else 0
-`           cornerbonus = 100 if max(game.gamegrid) in [game.gamegrid[0],game.gamegrid[3],game.gamegrid[12],game.gamegrid[15]] else 0
+                if game.new_merge(move, test=None) != game.gamegrid:
+                    game.new_merge(move)
+                    game.spawn_new_tile()
+                else:
+                    self.sequences[sequence] = -1000
+                    break
+                self.points += (game.score - startscore) * (self.cachedmoves - game.moves + self.depth)
+            self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game.gamegrid]
+            tilebonus = (6-len([i for i, tile in enumerate(self.intgamemgrid) if tile == " "]))*100 if len([i for i, tile in enumerate(self.intgamemgrid) if tile == " "]) < 6 else 0
+            valid_moves = sum(1 for direction in ["w", "a", "s", "d"] if game.new_merge(direction, test=True))*50
+            cornerbonus = int(max(self.intgamemgrid))**1.5 if max(self.intgamemgrid) in [self.intgamemgrid[0],self.intgamemgrid[3],self.intgamemgrid[12],self.intgamemgrid[15]] and game.moves > 10 else 0
             if self.sequences[sequence] == 0:
-                self.sequences[sequence] = game.score - tilebonus + cornerbonus
-        return list(mydict.keys())[list(mydict.values()).index(max(self.sequences.values())]
+                self.sequences[sequence] = self.points - tilebonus + cornerbonus + valid_moves
+            game.gamegrid = self.cachedgrid
+            game.moves = self.cachedmoves
+            game.score = self.cachedscore
+        return list(self.sequences.keys())[list(self.sequences.values()).index(max(self.sequences.values()))]
+    
+    def make_move(self, game):
+        game.new_merge(self.evaluate_sequences(game)[0])
 
 class OptionBox:
     def __init__(self, x, y, w, h, colour, highlight_colour, font, font_colour, option_list, selected = 0):
@@ -119,6 +204,7 @@ class Game2048:
         self.gamegrid = [" "] * self.gridsize
         self.score = 0
         self.win = False
+        self.winbefore = False
         self.moves = 0
         for _ in range(2):
             self.spawn_new_tile()
@@ -183,7 +269,8 @@ class Game2048:
         return merged if test else (self.gamegrid, self.score)
     
     def check_win(self):
-        if "2048" in self.gamegrid and self.win == False: self.win = True
+        self.win = False
+        if "2048" in self.gamegrid and self.winbefore == False: self.win,self.winbefore = True,True
         return self.win
     
     def check_full(self):
@@ -494,7 +581,10 @@ def main():
     setup = 2
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
     pygame.display.set_caption('2048')
+    game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
+    ai = LearningAI(game)
+    ai.load_q_table()
     while True:
         if setup == 2:
             while True:
@@ -509,6 +599,7 @@ def main():
                         checkquit()
                         pygame.display.update()
                 if renderer.butt_clicked(quit_butt):
+                    ai.save_q_table()  
                     pygame.quit()
                     sys.exit()
                 checkquit()
@@ -516,7 +607,7 @@ def main():
         if setup == 1:
             game = Game2048()
             setup = 0
-        result = gameloop(window, game, renderer)
+        result = gameloop(window, game, renderer, ai)
         if result == "win":
             while True:
                 cont_butt, rest_butt = renderer.render_winscreen(window)
@@ -551,9 +642,9 @@ def main():
                     pygame.quit()
                     sys.exit()
                 checkquit()
-                pygame.display.update()          
+                pygame.display.update()        
 
-def gameloop(window, game, renderer):
+def gameloop(window, game, renderer, ai):
     while not game.check_full():
         allfull = game.check_full()
         if game.check_win():
@@ -563,7 +654,9 @@ def gameloop(window, game, renderer):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if not allfull:
+                if event.key == pygame.K_i:
+                    ai.enable() if not ai.enabled else ai.disable()
+                if not allfull and not ai.enabled:
                     direction = None
                     if event.key in [pygame.K_w, pygame.K_UP]: direction = "w"
                     if event.key in [pygame.K_a, pygame.K_LEFT]: direction = "a"
@@ -572,6 +665,9 @@ def gameloop(window, game, renderer):
                     if direction and (game.new_merge(direction, test=True) or game.gamegrid != game.new_merge(direction, test=None)):
                         game.gamegrid, game.score = game.new_merge(direction)
                         game.spawn_new_tile()
+        if ai.enabled:
+            game.gamegrid, game.score = game.new_merge(ai.make_move())
+            game.spawn_new_tile()
         renderer.render_grid(game.gamegrid, window)
         sett_butt, menu_butt = renderer.render_bottom_row(game.score, window)
         if renderer.butt_clicked(sett_butt):
