@@ -66,13 +66,14 @@ class LearningAI:
         except Exception as e:
             print(f"Error saving Q-table: {e}")
 
-    def load_q_table(self, filename="q_table.pkl"):
+    def load_q_table(self, filename="/home/daniel/Github&Coding/2048_in_python/q_table.pkl"):
         """Load the Q-table from a file."""
         try:
             with open(filename, "rb") as f:
                 self.q_table = pickle.load(f)
         except FileNotFoundError:
             self.q_table = {}
+            print("Q-table file not found. Starting with an empty Q-table.")
 
     def make_move(self):
         """Make a move based on the current state."""
@@ -526,7 +527,7 @@ def main():
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-    ai = LearningAI(game, alpha=0.1, gamma=0.9, epsilon=0.1)
+    ai = LearningAI(game, alpha=0.1, gamma=0.9, epsilon=0.2)
     ai.load_q_table()
     while True:
         if setup == 2:
