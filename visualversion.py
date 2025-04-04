@@ -13,8 +13,9 @@ TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 RANDOM_LIST = random.sample(range(0, 10000), 10000)
+AI_DEPTH = 5
 
-class LearningAI:
+class RegularQAI:
     def __init__(self, alpha=0.1, gamma=0.9, epsilon=0.1):
         self.alpha = alpha  # Learning rate
         self.gamma = gamma  # Discount factor
@@ -88,6 +89,64 @@ class LearningAI:
         self.update_q_table(state, action, reward, next_state)
         return action
 
+class Heuristic_AI:
+    def __init__(self, game):
+        self.game = game
+        self.depth = AI_DEPTH
+        self.state = False
+
+    def set_state(self, state): self.state = state
+    def get_state(self): return self.state
+
+    def generate_sequences(self):
+        self.sequences = {}
+        options = ["w", "a", "s", "d"]
+        for i in range(4**self.depth):
+            sequence = []
+            for _ in range(self.depth):
+                sequence.append(options[i % 4])
+                i //= 4
+            self.sequences["".join(sequence)] = 0
+    
+    def evaluate_sequences(self, game):
+        # A Sequences score is defined as:
+        # The Current Score
+        # Minus the (tiles on the board - 12) * 50
+        # Add 100 if the largest value tile is in the corner (after move 10 only)
+        # Set Score to minus 1000 if the game is over.
+        self.cachedmoves = game.moves
+        self.cachedgrid = game.gamegrid
+        self.cachedscore = game.score
+        self.generate_sequences()
+        for sequence in self.sequences:
+            self.points = 0
+            cornerbonus = 0
+            for move in sequence:
+                startscore = game.score
+                if game.check_full():
+                    self.sequences[sequence] = -100000
+                    break
+                if game.new_merge(move, test='grid'):
+                    game.new_merge(move)
+                    game.spawn_new_tile()
+                else:
+                    self.sequences[sequence] = -1000000
+                    break
+                self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game.gamegrid]
+                cornerbonus += int(max(self.intgamemgrid))/2 if max(self.intgamemgrid) in [self.intgamemgrid[0],self.intgamemgrid[3],self.intgamemgrid[12],self.intgamemgrid[15]] and game.moves > 10 else 0
+                self.points += (game.score - startscore) * (self.cachedmoves - game.moves + self.depth)
+            self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game.gamegrid]
+            tilebonus = 5**(6-len([i for i, tile in enumerate(self.intgamemgrid) if tile == " "])) if len([i for i, tile in enumerate(self.intgamemgrid) if tile == " "]) < 6 else 0
+            valid_moves = sum(1 for direction in ["w", "a", "s", "d"] if game.new_merge(direction, test=True))*50
+            if self.sequences[sequence] == 0:
+                self.sequences[sequence] = self.points - tilebonus + cornerbonus + valid_moves
+            game.gamegrid = self.cachedgrid
+            game.moves = self.cachedmoves
+            game.score = self.cachedscore
+        return list(self.sequences.keys())[list(self.sequences.values()).index(max(self.sequences.values()))]
+    
+    def make_move(self, game):
+        game.new_merge(self.evaluate_sequences(game)[0])
 
 class OptionBox:
     def __init__(self, x, y, w, h, colour, highlight_colour, font, font_colour, option_list, selected = 0):
@@ -182,6 +241,7 @@ class Game2048:
         return grid
 
     def new_merge(self, direction, test=False):
+        oldgrid = self.gamegrid.copy()
         merged = False
         row_and_column_split = self.row_and_column_splitting()
         is_column = 0 if direction in ["a", "d"] else 1
@@ -210,6 +270,8 @@ class Game2048:
             self.moves += 1
         if test is None:
             return self.construct_new_grid(direction, row_and_column_split[is_column])
+        if test == 'grid':
+            return oldgrid != self.construct_new_grid(direction, row_and_column_split[is_column])
         return merged if test else (self.gamegrid, self.score)
     
     def check_win(self):
@@ -527,7 +589,7 @@ def main():
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-    ai = LearningAI(alpha=0.25, gamma=0.9, epsilon=0.2)
+    ai = RegularQAI(alpha=0.25, gamma=0.9, epsilon=0.2)
     ai.load_q_table()
     while True:
         if setup == 2:
@@ -551,7 +613,7 @@ def main():
         if setup == 1:
             game = Game2048()
             setup = 0
-        result = gameloop(window, game, renderer, ai)
+        result = gameloop(window, game, renderer, ai, hai=Heuristic_AI(game))
         if result == "win":
             while True:
                 cont_butt, rest_butt = renderer.render_winscreen(window)
@@ -596,7 +658,7 @@ def main():
                 checkquit()
                 pygame.display.update()        
 
-def gameloop(window, game, renderer, ai):
+def gameloop(window, game, renderer, ai, hai):
     while not game.check_full():
         allfull = game.check_full()
         if game.check_win():
@@ -606,8 +668,10 @@ def gameloop(window, game, renderer, ai):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_i:
+                if event.key == pygame.K_i and not hai.get_set_state():
                     ai.enable() if not ai.enabled else ai.disable()
+                if event.key == pygame.K_h and not ai.enabled:
+                    hai.set_state(True) if not hai.get_state() else hai.set_state(False)
                 if not allfull and not ai.enabled:
                     direction = None
                     if event.key in [pygame.K_w, pygame.K_UP]: direction = "w"
@@ -619,6 +683,9 @@ def gameloop(window, game, renderer, ai):
                         game.spawn_new_tile()
         if ai.enabled:
             game.gamegrid, game.score = game.new_merge(ai.make_move(game))
+            game.spawn_new_tile()
+        if hai.get_state():
+            hai.make_move(game)
             game.spawn_new_tile()
         renderer.render_grid(game.gamegrid, window)
         sett_butt, menu_butt = renderer.render_bottom_row(game.score, window)
