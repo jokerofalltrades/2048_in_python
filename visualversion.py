@@ -2,9 +2,6 @@
 import pygame
 import sys
 import random
-import time
-import numpy as np
-import pickle
 from pygame.locals import *
 
 # Constants
@@ -14,80 +11,6 @@ SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 RANDOM_LIST = random.sample(range(0, 10000), 10000)
 AI_DEPTH = 5
-
-class RegularQAI:
-    def __init__(self, alpha=0.1, gamma=0.9, epsilon=0.1):
-        self.alpha = alpha  # Learning rate
-        self.gamma = gamma  # Discount factor
-        self.epsilon = epsilon  # Exploration rate
-        self.q_table = {}  # Q-table to store state-action values
-        self.enabled = False
-    
-    def enable(self):
-        """Enable the AI."""
-        self.enabled = True
-    
-    def disable(self):
-        """Disable the AI."""
-        self.enabled = False
-
-    def get_state(self, game):
-        """Convert the game grid into a tuple to use as a state."""
-        return tuple(game.gamegrid)
-
-    def choose_action(self, state):
-        """Choose an action using epsilon-greedy strategy."""
-        if random.random() < self.epsilon:
-            # Explore: Choose a random action
-            return random.choice(["w", "a", "s", "d"])
-        else:
-            # Exploit: Choose the action with the highest Q-value
-            if state not in self.q_table:
-                self.q_table[state] = {action: 0 for action in ["w", "a", "s", "d"]}
-            return max(self.q_table[state], key=self.q_table[state].get)
-
-    def update_q_table(self, state, action, reward, next_state):
-        """Update the Q-value for the given state-action pair."""
-        if state not in self.q_table:
-            self.q_table[state] = {action: 0 for action in ["w", "a", "s", "d"]}
-        if next_state not in self.q_table:
-            self.q_table[next_state] = {action: 0 for action in ["w", "a", "s", "d"]}
-        
-        # Bellman equation
-        max_next_q = max(self.q_table[next_state].values())
-        old_q_value = self.q_table[state][action]
-        self.q_table[state][action] += round(self.alpha * (reward + self.gamma * max_next_q - old_q_value),3)
-
-    def save_q_table(self, filepath="/home/daniel/Github&Coding/2048_in_python/q_table.pkl"):
-        """Save the Q-table to a file."""
-        try:
-            with open(filepath, "wb") as f:
-                pickle.dump(self.q_table, f)
-            print(f"Q-table successfully saved to {filepath}")
-        except Exception as e:
-            print(f"Error saving Q-table: {e}")
-
-    def load_q_table(self, filename="/home/daniel/Github&Coding/2048_in_python/q_table.pkl"):
-        """Load the Q-table from a file."""
-        try:
-            with open(filename, "rb") as f:
-                self.q_table = pickle.load(f)
-        except FileNotFoundError:
-            self.q_table = {}
-            print("Q-table file not found. Starting with an empty Q-table.")
-
-    def make_move(self,game):
-        """Make a move based on the current state."""
-        state = self.get_state(game)
-        action = self.choose_action(state)
-        next_grid, reward = game.new_merge(action, test=None), game.score
-        if next_grid != game.gamegrid:
-            game.new_merge(action)
-            game.spawn_new_tile()
-            reward = game.score - reward  # Reward is the score increase
-        next_state = self.get_state(game)
-        self.update_q_table(state, action, reward, next_state)
-        return action
 
 class Heuristic_AI:
     def __init__(self, game):
@@ -589,8 +512,6 @@ def main():
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-    ai = RegularQAI(alpha=0.25, gamma=0.9, epsilon=0.2)
-    ai.load_q_table()
     while True:
         if setup == 2:
             while True:
@@ -604,8 +525,7 @@ def main():
                         if renderer.butt_clicked(back_butt): break
                         checkquit()
                         pygame.display.update()
-                if renderer.butt_clicked(quit_butt):
-                    ai.save_q_table()  
+                if renderer.butt_clicked(quit_butt):  
                     pygame.quit()
                     sys.exit()
                 checkquit()
@@ -613,7 +533,7 @@ def main():
         if setup == 1:
             game = Game2048()
             setup = 0
-        result = gameloop(window, game, renderer, ai, hai=Heuristic_AI(game))
+        result = gameloop(window, game, renderer, hai=Heuristic_AI(game))
         if result == "win":
             while True:
                 cont_butt, rest_butt = renderer.render_winscreen(window)
@@ -625,10 +545,6 @@ def main():
                 checkquit()
         if result == "lose":
             while True:
-                if ai.enabled:
-                    ai.save_q_table()
-                    setup = 1
-                    break
                 quit_butt, rest_butt = renderer.render_losescreen(window)
                 pygame.display.update()
                 if renderer.butt_clicked(quit_butt):
@@ -637,10 +553,6 @@ def main():
                 if renderer.butt_clicked(rest_butt):
                     setup = 1
                     break
-                for event in pygame.event.get():
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_s:
-                            ai.save_q_table()
                 checkquit()
         if result == "menu":
             while True:
@@ -658,7 +570,7 @@ def main():
                 checkquit()
                 pygame.display.update()        
 
-def gameloop(window, game, renderer, ai, hai):
+def gameloop(window, game, renderer, hai):
     while not game.check_full():
         allfull = game.check_full()
         if game.check_win():
@@ -668,11 +580,9 @@ def gameloop(window, game, renderer, ai, hai):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_i and not hai.get_set_state():
-                    ai.enable() if not ai.enabled else ai.disable()
-                if event.key == pygame.K_h and not ai.enabled:
+                if event.key == pygame.K_i:
                     hai.set_state(True) if not hai.get_state() else hai.set_state(False)
-                if not allfull and not ai.enabled:
+                if not allfull and not hai.get_state():
                     direction = None
                     if event.key in [pygame.K_w, pygame.K_UP]: direction = "w"
                     if event.key in [pygame.K_a, pygame.K_LEFT]: direction = "a"
@@ -681,9 +591,6 @@ def gameloop(window, game, renderer, ai, hai):
                     if direction and (game.new_merge(direction, test=True) or game.gamegrid != game.new_merge(direction, test=None)):
                         game.gamegrid, game.score = game.new_merge(direction)
                         game.spawn_new_tile()
-        if ai.enabled:
-            game.gamegrid, game.score = game.new_merge(ai.make_move(game))
-            game.spawn_new_tile()
         if hai.get_state():
             hai.make_move(game)
             game.spawn_new_tile()
