@@ -15,8 +15,7 @@ BOTTOM_ROW_HEIGHT = 80
 RANDOM_LIST = random.sample(range(0, 10000), 10000)
 
 class LearningAI:
-    def __init__(self, game, alpha=0.1, gamma=0.9, epsilon=0.1):
-        self.game = game
+    def __init__(self, alpha=0.1, gamma=0.9, epsilon=0.1):
         self.alpha = alpha  # Learning rate
         self.gamma = gamma  # Discount factor
         self.epsilon = epsilon  # Exploration rate
@@ -31,9 +30,9 @@ class LearningAI:
         """Disable the AI."""
         self.enabled = False
 
-    def get_state(self):
+    def get_state(self, game):
         """Convert the game grid into a tuple to use as a state."""
-        return tuple(self.game.gamegrid)
+        return tuple(game.gamegrid)
 
     def choose_action(self, state):
         """Choose an action using epsilon-greedy strategy."""
@@ -55,7 +54,8 @@ class LearningAI:
         
         # Bellman equation
         max_next_q = max(self.q_table[next_state].values())
-        self.q_table[state][action] += self.alpha * (reward + self.gamma * max_next_q - self.q_table[state][action])
+        old_q_value = self.q_table[state][action]
+        self.q_table[state][action] += round(self.alpha * (reward + self.gamma * max_next_q - old_q_value),3)
 
     def save_q_table(self, filepath="/home/daniel/Github&Coding/2048_in_python/q_table.pkl"):
         """Save the Q-table to a file."""
@@ -75,16 +75,16 @@ class LearningAI:
             self.q_table = {}
             print("Q-table file not found. Starting with an empty Q-table.")
 
-    def make_move(self):
+    def make_move(self,game):
         """Make a move based on the current state."""
-        state = self.get_state()
+        state = self.get_state(game)
         action = self.choose_action(state)
-        next_grid, reward = self.game.new_merge(action, test=None), 0
-        if next_grid != self.game.gamegrid:
-            self.game.new_merge(action)
-            self.game.spawn_new_tile()
-            reward = self.game.score - reward  # Reward is the score increase
-        next_state = self.get_state()
+        next_grid, reward = game.new_merge(action, test=None), game.score
+        if next_grid != game.gamegrid:
+            game.new_merge(action)
+            game.spawn_new_tile()
+            reward = game.score - reward  # Reward is the score increase
+        next_state = self.get_state(game)
         self.update_q_table(state, action, reward, next_state)
         return action
 
@@ -527,7 +527,7 @@ def main():
     pygame.display.set_caption('2048')
     game = Game2048()
     renderer = Renderer(WINDOW_SIZE, theme)
-    ai = LearningAI(game, alpha=0.1, gamma=0.9, epsilon=0.2)
+    ai = LearningAI(alpha=0.25, gamma=0.9, epsilon=0.2)
     ai.load_q_table()
     while True:
         if setup == 2:
@@ -618,7 +618,7 @@ def gameloop(window, game, renderer, ai):
                         game.gamegrid, game.score = game.new_merge(direction)
                         game.spawn_new_tile()
         if ai.enabled:
-            game.gamegrid, game.score = game.new_merge(ai.make_move())
+            game.gamegrid, game.score = game.new_merge(ai.make_move(game))
             game.spawn_new_tile()
         renderer.render_grid(game.gamegrid, window)
         sett_butt, menu_butt = renderer.render_bottom_row(game.score, window)
