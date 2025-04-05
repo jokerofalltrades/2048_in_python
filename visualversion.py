@@ -411,15 +411,21 @@ class Renderer:
         window.blit(restart_text, restart_rect)
         return continue_button, restart_button
     
-    def render_losescreen(self, window):
+    def render_losescreen(self, window, score) -> tuple:
         #Text Rendering
         background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
         pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
         font = pygame.font.SysFont('quicksand', 60, bold=True)
+        font2 = pygame.font.SysFont('quicksand', 40, bold=True)
         lose_text = font.render("You Lose...", False, self.colours[self.theme]["dfont&buttons"])
+        score_text = font2.render("Your Score: "+str(score), False, self.colours[self.theme]["dfont&buttons"])
         lose_text_rect = lose_text.get_rect(center=background_rect.center)
+        score_text_rect = score_text.get_rect(center=background_rect.center)
         lose_text_rect.y -= 50
+        score_text_rect.y += 20
         window.blit(lose_text, lose_text_rect)
+        window.blit(score_text, score_text_rect)
+        #Button Rendering
         font = pygame.font.SysFont('quicksand', 35)
         menu_text = font.render("Menu", False, self.colours[self.theme]["lfont"])
         restart_text = font.render("Restart", False, self.colours[self.theme]["lfont"])
@@ -545,7 +551,7 @@ def main():
                 checkquit()
         if result == "lose":
             while True:
-                quit_butt, rest_butt = renderer.render_losescreen(window)
+                quit_butt, rest_butt = renderer.render_losescreen(window, game.score)
                 pygame.display.update()
                 if renderer.butt_clicked(quit_butt):
                     setup = 2
