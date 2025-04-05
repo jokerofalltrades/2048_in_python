@@ -2,6 +2,7 @@
 import pygame
 import sys
 import random
+import copy
 from pygame.locals import *
 
 # Constants
@@ -38,35 +39,30 @@ class Heuristic_AI:
         # A anti-bonus for having the board too full: 4^(6 - number of empty tiles)
         # Add the largest tile's value if it is in the corner (after move 10 only)
         # Set Score to minus 100000 if the game is over and -1 million if a move is invalid
-        self.cachedmoves = game.moves
-        self.cachedgrid = game.gamegrid.copy()
-        self.cachedscore = game.score
         self.generate_sequences()
         for sequence in self.sequences:
+            game_copy = copy.deepcopy(game)
             self.points = 0
             cornerbonus = 0
             for move in sequence:
                 startscore = game.score
-                if game.check_full():
+                if game_copy.check_full():
                     self.sequences[sequence] = -100000
                     break
-                if game.new_merge(move, test='grid'):
-                    game.new_merge(move)
-                    game.spawn_new_tile()
+                if game_copy.new_merge(move, test='grid'):
+                    game_copy.new_merge(move)
+                    game_copy.spawn_new_tile()
                 else:
                     self.sequences[sequence] = -1000000
                     break
-                self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game.gamegrid]
-                cornerbonus += int(max(self.intgamemgrid))/2 if max(self.intgamemgrid) in [self.intgamemgrid[0],self.intgamemgrid[3],self.intgamemgrid[12],self.intgamemgrid[15]] and game.moves > 10 else 0
-                self.points += (game.score - startscore) * (self.cachedmoves - game.moves + self.depth)
-            self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game.gamegrid]
+                self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game_copy.gamegrid]
+                cornerbonus += int(max(self.intgamemgrid))/2 if max(self.intgamemgrid) in [self.intgamemgrid[0],self.intgamemgrid[3],self.intgamemgrid[12],self.intgamemgrid[15]] and game_copy.moves > 10 else 0
+                self.points += (game.score - startscore) * (game.moves - game_copy.moves + self.depth)
+            self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game_copy.gamegrid]
             tilebonus = 4**(6-len([i for i, tile in enumerate(self.intgamemgrid) if tile == 0])) if len([i for i, tile in enumerate(self.intgamemgrid) if tile == 0]) < 6 else 0
-            valid_moves = sum(1 for direction in ["w", "a", "s", "d"] if game.new_merge(direction, test=True))*25
+            valid_moves = sum(1 for direction in ["w", "a", "s", "d"] if game_copy.new_merge(direction, test=True))*25
             if self.sequences[sequence] == 0:
                 self.sequences[sequence] = self.points - tilebonus + cornerbonus + valid_moves
-            game.gamegrid = self.cachedgrid
-            game.moves = self.cachedmoves
-            game.score = self.cachedscore
         return list(self.sequences.keys())[list(self.sequences.values()).index(max(self.sequences.values()))]
     
     def make_move(self, game):
