@@ -3,6 +3,7 @@ import pygame
 import sys
 import random
 import copy
+import math
 from pygame.locals import *
 
 # Constants
@@ -22,6 +23,27 @@ class Heuristic_AI:
     def set_state(self, state): self.state = state
     def get_state(self): return self.state
 
+    def calculate_smoothness(self,game):
+        """Calculate the smoothness of the grid (average log2 difference between adjacent tiles)."""
+        smoothness = 0
+        total_comparisons = 0
+        gamegrid = [[],[],[],[]]
+        for i, tile in enumerate(game.gamegrid):
+            gamegrid[i // 4].append(tile)
+        log_grid = [[math.log2(int(tile)) if tile != " " else 0 for tile in row] for row in gamegrid]
+        for row in range(len(log_grid)):
+            for column in range(len(log_grid[row])):
+                current_value = log_grid[row][column]
+                if column < len(log_grid[row]) - 1:
+                    right_value = log_grid[row][column + 1]
+                    smoothness -= abs(current_value - right_value)
+                    total_comparisons += 1
+                if row < len(log_grid) - 1:
+                    down_value = log_grid[row + 1][column]
+                    smoothness -= abs(current_value - down_value)
+                    total_comparisons += 1
+        return smoothness/total_comparisons
+    
     def generate_sequences(self):
         self.sequences = {}
         options = ["w", "a", "s", "d"]
@@ -33,19 +55,19 @@ class Heuristic_AI:
             self.sequences["".join(sequence)] = 0
     
     def evaluate_sequences(self, game):
-        # A Sequences score is defined as:
-        # The number of points gained from the move * how close the move is to the original position
-        # The number of valid moves * 25
-        # A anti-bonus for having the board too full: 4^(6 - number of empty tiles)
-        # Add the largest tile's value if it is in the corner (after move 10 only)
-        # Set Score to minus 100000 if the game is over and -1 million if a move is invalid
+        """A Sequences score is defined as:
+    The number of points gained from the move * how close the move is to the original position
+    The number of valid moves * 25
+    A anti-bonus for having the board too full: 4^(6 - number of empty tiles)
+    Add the largest tile's value if it is in the corner (after move 10 only)
+    Set Score to minus 100000 if the game is over and -1 million if a move is invalid"""
         self.generate_sequences()
         for sequence in self.sequences:
             game_copy = copy.deepcopy(game)
             self.points = 0
             cornerbonus = 0
             for move in sequence:
-                startscore = game.score
+                startscore = game_copy.score
                 if game_copy.check_full():
                     self.sequences[sequence] = -100000
                     break
@@ -57,12 +79,13 @@ class Heuristic_AI:
                     break
                 self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game_copy.gamegrid]
                 cornerbonus += int(max(self.intgamemgrid))/2 if max(self.intgamemgrid) in [self.intgamemgrid[0],self.intgamemgrid[3],self.intgamemgrid[12],self.intgamemgrid[15]] and game_copy.moves > 10 else 0
-                self.points += (game.score - startscore) * (game.moves - game_copy.moves + self.depth)
+                self.points += (game_copy.score - startscore) * (game.moves - game_copy.moves + self.depth)
             self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game_copy.gamegrid]
             tilebonus = 4**(6-len([i for i, tile in enumerate(self.intgamemgrid) if tile == 0])) if len([i for i, tile in enumerate(self.intgamemgrid) if tile == 0]) < 6 else 0
+            smoothness = round(self.calculate_smoothness(game_copy)*100,3)
             valid_moves = sum(1 for direction in ["w", "a", "s", "d"] if game_copy.new_merge(direction, test=True))*25
             if self.sequences[sequence] == 0:
-                self.sequences[sequence] = self.points - tilebonus + cornerbonus + valid_moves
+                self.sequences[sequence] = self.points - tilebonus + smoothness + cornerbonus + valid_moves
         return list(self.sequences.keys())[list(self.sequences.values()).index(max(self.sequences.values()))]
     
     def make_move(self, game):
