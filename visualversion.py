@@ -10,7 +10,7 @@ TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 RANDOM_LIST = random.sample(range(0, 10000), 10000)
-AI_DEPTH = 2
+AI_DEPTH = 5
 
 class Heuristic_AI:
     def __init__(self, game):
@@ -35,7 +35,7 @@ class Heuristic_AI:
         # A Sequences score is defined as:
         # The number of points gained from the move * how close the move is to the original position
         # The number of valid moves * 25
-        # A anti-bonus for having the board too full: 5^(6 - number of empty tiles)
+        # A anti-bonus for having the board too full: 4^(6 - number of empty tiles)
         # Add the largest tile's value if it is in the corner (after move 10 only)
         # Set Score to minus 100000 if the game is over and -1 million if a move is invalid
         self.cachedmoves = game.moves
@@ -60,7 +60,7 @@ class Heuristic_AI:
                 cornerbonus += int(max(self.intgamemgrid))/2 if max(self.intgamemgrid) in [self.intgamemgrid[0],self.intgamemgrid[3],self.intgamemgrid[12],self.intgamemgrid[15]] and game.moves > 10 else 0
                 self.points += (game.score - startscore) * (self.cachedmoves - game.moves + self.depth)
             self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game.gamegrid]
-            tilebonus = 5**(6-len([i for i, tile in enumerate(self.intgamemgrid) if tile == 0])) if len([i for i, tile in enumerate(self.intgamemgrid) if tile == 0]) < 6 else 0
+            tilebonus = 4**(6-len([i for i, tile in enumerate(self.intgamemgrid) if tile == 0])) if len([i for i, tile in enumerate(self.intgamemgrid) if tile == 0]) < 6 else 0
             valid_moves = sum(1 for direction in ["w", "a", "s", "d"] if game.new_merge(direction, test=True))*25
             if self.sequences[sequence] == 0:
                 self.sequences[sequence] = self.points - tilebonus + cornerbonus + valid_moves
