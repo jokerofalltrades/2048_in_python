@@ -33,10 +33,11 @@ class Heuristic_AI:
     
     def evaluate_sequences(self, game):
         # A Sequences score is defined as:
-        # The Current Score
-        # Minus the (tiles on the board - 12) * 50
-        # Add 100 if the largest value tile is in the corner (after move 10 only)
-        # Set Score to minus 1000 if the game is over.
+        # The number of points gained from the move * how close the move is to the original position
+        # The number of valid moves * 50
+        # A anti-bonus for having the board too full: 5^(6 - number of empty tiles)
+        # Add the largest tile's value if it is in the corner (after move 10 only)
+        # Set Score to minus 100000 if the game is over and -1 million if a move is invalid
         self.cachedmoves = game.moves
         self.cachedgrid = game.gamegrid
         self.cachedscore = game.score
