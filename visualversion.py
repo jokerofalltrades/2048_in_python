@@ -487,13 +487,12 @@ class Renderer:
         window.blit(quit_text, quit_rect)
         return play_button, sett_button, quit_button
         
-    def render_settings(self, window):
+    def render_settings(self, window, ai_enabled):
         background_rect = Rect(0, 0, self.window_size, self.window_size+BOTTOM_ROW_HEIGHT)
         pygame.draw.rect(window, (self.colours[self.theme]["bg"]), background_rect)
         self.selectoption = self.themeoptions.update()
         if self.selectoption != -1: self.theme = self.themelist[self.selectoption]
         if self.themeoptions.colour != self.colours[self.theme]["bg"]: self.create_option_box(self.selectoption)
-        self.themeoptions.draw(window)
         #Text Rendering
         font = pygame.font.SysFont('quicksand', 60, bold=True)
         title_text = font.render("Settings:", False, self.colours[self.theme]["dfont&buttons"])
@@ -504,6 +503,9 @@ class Renderer:
         themes_text = font.render("Themes:", False, self.colours[self.theme]["dfont&buttons"])
         themes_text_rect = themes_text.get_rect(center=(background_rect.centerx, background_rect.centery-110))
         window.blit(themes_text, themes_text_rect)
+        ai_text = font.render("AI Enabled:", False, self.colours[self.theme]["dfont&buttons"])
+        ai_text_rect = ai_text.get_rect(center=(background_rect.centerx-50, background_rect.centery+20))
+        window.blit(ai_text, ai_text_rect)
         #Button Rendering
         font = pygame.font.SysFont('quicksand', 35)
         back_text = font.render("X", False, self.colours[self.theme]["lfont"])
@@ -511,6 +513,8 @@ class Renderer:
         back_rect = back_text.get_rect(center=back_button.center)
         pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], back_button, border_radius=10)
         window.blit(back_text, back_rect)
+        
+        self.themeoptions.draw(window)
         return back_button
     
     def butt_clicked(self, rect):
