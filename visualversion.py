@@ -12,7 +12,7 @@ TILE_SIZE = 95
 SPACING = 10
 BOTTOM_ROW_HEIGHT = 80
 RANDOM_LIST = random.sample(range(0, 10000), 10000)
-AI_DEPTH = 5
+AI_DEPTH = 4
 
 class Heuristic_AI:
     def __init__(self, game):
@@ -507,15 +507,19 @@ class Renderer:
         ai_text_rect = ai_text.get_rect(center=(background_rect.centerx-50, background_rect.centery+20))
         window.blit(ai_text, ai_text_rect)
         #Button Rendering
-        font = pygame.font.SysFont('quicksand', 35)
+        font = pygame.font.SysFont('quicksand', 30)
         back_text = font.render("X", False, self.colours[self.theme]["lfont"])
         back_button = Rect(WINDOW_SIZE-SPACING*2-back_text.get_rect().height, SPACING, back_text.get_rect().height + SPACING, back_text.get_rect().height + SPACING)
         back_rect = back_text.get_rect(center=back_button.center)
+        ai_enabled_text = font.render("On" if ai_enabled == True else "Off", False, self.colours[self.theme]["lfont"])
+        ai_enabled_button = Rect(ai_text_rect.right + 10, ai_text_rect.top-3, ai_enabled_text.get_rect().width + 20, ai_enabled_text.get_rect().height + 20)
+        ai_enabled_rect = ai_enabled_text.get_rect(center=ai_enabled_button.center)
         pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], back_button, border_radius=10)
+        pygame.draw.rect(window, self.colours[self.theme]["dfont&buttons"], ai_enabled_button, border_radius=10)
+        window.blit(ai_enabled_text, ai_enabled_rect)
         window.blit(back_text, back_rect)
-        
         self.themeoptions.draw(window)
-        return back_button
+        return back_button, ai_enabled_button
     
     def butt_clicked(self, rect):
         action = False
@@ -541,6 +545,7 @@ def main():
     window = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
     pygame.display.set_caption('2048')
     game = Game2048()
+    hai = Heuristic_AI(game)
     renderer = Renderer(WINDOW_SIZE, theme)
     while True:
         if setup == 2:
@@ -551,8 +556,9 @@ def main():
                     break
                 if renderer.butt_clicked(sett_butt):
                     while True:
-                        back_butt = renderer.render_settings(window)
+                        back_butt, ai_enabled_butt = renderer.render_settings(window, hai.get_state())
                         if renderer.butt_clicked(back_butt): break
+                        if renderer.butt_clicked(ai_enabled_butt): hai.set_state(not hai.get_state())
                         checkquit()
                         pygame.display.update()
                 if renderer.butt_clicked(quit_butt):  
@@ -563,7 +569,7 @@ def main():
         if setup == 1:
             game = Game2048()
             setup = 0
-        result = gameloop(window, game, renderer, hai=Heuristic_AI(game))
+        result = gameloop(window, game, renderer, hai)
         if result == "win":
             while True:
                 cont_butt, rest_butt = renderer.render_winscreen(window)
@@ -610,8 +616,6 @@ def gameloop(window, game, renderer, hai):
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_i:
-                    hai.set_state(True) if not hai.get_state() else hai.set_state(False)
                 if not allfull and not hai.get_state():
                     direction = None
                     if event.key in [pygame.K_w, pygame.K_UP]: direction = "w"
@@ -628,8 +632,9 @@ def gameloop(window, game, renderer, hai):
         sett_butt, menu_butt = renderer.render_bottom_row(game.score, window)
         if renderer.butt_clicked(sett_butt):
             while True:
-                back_butt = renderer.render_settings(window)
+                back_butt, ai_enabled_butt = renderer.render_settings(window, hai.get_state())
                 if renderer.butt_clicked(back_butt): break
+                if renderer.butt_clicked(ai_enabled_butt): hai.set_state(not hai.get_state())
                 checkquit()
                 pygame.display.update()
         if renderer.butt_clicked(menu_butt): return "menu"
