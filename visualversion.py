@@ -16,23 +16,22 @@ BOTTOM_ROW_HEIGHT = 80
 RANDOM_LIST = random.sample(range(10000), 10000)
 AI_DEPTH = 3
 
-class Heuristic_AI:
-    def __init__(self, game):
-        self.game = game
+class HeuristicAI:
+    def __init__(self):
         self.depth = AI_DEPTH
         self.state = False
 
     def set_state(self, state): self.state = state
     def get_state(self): return self.state
 
-    def calculate_smoothness(self,game):
+    def calculate_smoothness(self, game: 'Game2048'):
         """Calculate the smoothness of the grid (average log2 difference between adjacent tiles)."""
         smoothness = 0
         total_comparisons = 0
         gamegrid = [[],[],[],[]]
         for i, tile in enumerate(game.gamegrid):
             gamegrid[i // 4].append(tile)
-        log_grid = [[math.log2(int(tile)) if tile != " " else 0 for tile in row] for row in gamegrid]
+        log_grid = [[math.log2(int(tile)) if tile != "0" else 0 for tile in row] for row in gamegrid]
         for row in range(len(log_grid)):
             for column in range(len(log_grid[row])):
                 current_value = log_grid[row][column]
@@ -44,7 +43,7 @@ class Heuristic_AI:
                     down_value = log_grid[row + 1][column]
                     smoothness -= abs(current_value - down_value)
                     total_comparisons += 1
-        return smoothness/total_comparisons
+        return smoothness / total_comparisons
 
     def generate_sequences(self):
         self.sequences = {}
@@ -80,14 +79,14 @@ class Heuristic_AI:
                 game_copy.merge_v3(move, mode="execute")
                 game_copy.spawn_new_tile()
 
-                self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game_copy.gamegrid]
+                self.intgamemgrid = [int(tile) for tile in game_copy.gamegrid]
                 max_tile = max(self.intgamemgrid)
 
                 if max_tile in (self.intgamemgrid[0], self.intgamemgrid[3], self.intgamemgrid[12], self.intgamemgrid[15]) and game_copy.moves > 10:
                     cornerbonus += max_tile / 2
 
                 self.points += points_gained * (game.moves - game_copy.moves + self.depth)
-            self.intgamemgrid = [int(tile) if tile != " " else 0 for tile in game_copy.gamegrid]
+            self.intgamemgrid = [int(tile) for tile in game_copy.gamegrid]
             tilebonus = 4 ** max(6 - self.intgamemgrid.count(0), 0)
             smoothness = round(self.calculate_smoothness(game_copy) * 100, 3)
             valid_moves = sum(1 for direction in ("w", "a", "s", "d") if game_copy.merge_v3(direction, mode="can_move")) * 25
@@ -99,7 +98,7 @@ class Heuristic_AI:
         game.merge_v3(self.evaluate_sequences(game)[0], mode="execute")
 
 class OptionBox:
-    def __init__(self, rect: pygame.Rect | tuple[int, int, int, int], colour: pygame.Color | tuple[int, int, int], highlight_colour: pygame.Color | tuple[int, int, int], font: pygame.font.Font, font_colour: pygame.Color | tuple[int, int, int], option_list: list[str], selected = 0):
+    def __init__(self, display: pygame.Surface, rect: pygame.Rect | tuple[int, int, int, int], colour: pygame.Color | tuple[int, int, int], highlight_colour: pygame.Color | tuple[int, int, int], font: pygame.font.Font, font_colour: pygame.Color | tuple[int, int, int], option_list: list[str], selected = 0):
         self.colour = colour
         self.highlight_colour = highlight_colour
         self.rect = pygame.Rect(rect) if isinstance(rect, tuple) else rect
@@ -111,21 +110,22 @@ class OptionBox:
         self.menu_active = False
         self.clicked = False
         self.active_option = -1
+        self.display = display
 
-    def draw(self, surf: pygame.Surface):
-        pygame.draw.rect(surf, self.highlight_colour if self.menu_active else self.colour, self.rect)
-        pygame.draw.rect(surf, (0, 0, 0), self.rect, 2)
+    def draw(self):
+        pygame.draw.rect(self.display, self.highlight_colour if self.menu_active else self.colour, self.rect)
+        pygame.draw.rect(self.display, (0, 0, 0), self.rect, 2)
         msg = self.font.render(self.option_list[self.selected], 1, self.font_colour)
-        surf.blit(msg, msg.get_rect(center = self.rect.center))
+        self.display.blit(msg, msg.get_rect(center = self.rect.center))
         if self.draw_menu:
             for i, text in enumerate(self.option_list):
                 rect = self.rect.copy()
                 rect.y += (i+1) * self.rect.height
-                pygame.draw.rect(surf, self.highlight_colour if i == self.active_option else self.colour, rect)
+                pygame.draw.rect(self.display, self.highlight_colour if i == self.active_option else self.colour, rect)
                 msg = self.font.render(text, 1, self.font_colour)
-                surf.blit(msg, msg.get_rect(center = rect.center))
+                self.display.blit(msg, msg.get_rect(center = rect.center))
             outer_rect = (self.rect.x, self.rect.y + self.rect.height, self.rect.width, self.rect.height * len(self.option_list))
-            pygame.draw.rect(surf, (0, 0, 0), outer_rect, 2)
+            pygame.draw.rect(self.display, (0, 0, 0), outer_rect, 2)
 
     def update(self):
         mpos = pygame.mouse.get_pos()
@@ -154,7 +154,7 @@ class OptionBox:
 class Game2048:
     def __init__(self):
         self.gridsize = 16
-        self.gamegrid = [" "] * self.gridsize
+        self.gamegrid = ["0"] * self.gridsize
         self.score = 0
         self.win = False
         self.winbefore = False
@@ -163,8 +163,8 @@ class Game2048:
             self.spawn_new_tile()
 
     def spawn_new_tile(self):
-        highest_tile = max([int(tile) for tile in self.gamegrid if tile != " "]) if any(tile != " " for tile in self.gamegrid) else 2
-        empty_tiles = [i for i, tile in enumerate(self.gamegrid) if tile == " "]
+        highest_tile = max([int(tile) for tile in self.gamegrid if tile != "0"]) if any(tile != "0" for tile in self.gamegrid) else 2
+        empty_tiles = [i for i, tile in enumerate(self.gamegrid) if tile == "0"]
         if empty_tiles:
             index = empty_tiles[RANDOM_LIST[self.moves % 10000] % len(empty_tiles)]
             self.gamegrid[index] = str(4 if RANDOM_LIST[self.moves % 10000] % 4 == 0 else 2) if highest_tile >= 4 else "2"
@@ -181,7 +181,7 @@ class Game2048:
         points_gained: int = 0
 
         for file in merge_grid:
-            file_no_empty = [tile for tile in file if tile != " "]
+            file_no_empty = [tile for tile in file if tile != "0"]
             if not file_no_empty:
                 new_grid.append(file)
                 continue
@@ -197,7 +197,7 @@ class Game2048:
                 else:
                     processed_file.append(file_no_empty[i])
                     i += 1
-            padded_file = processed_file + [" "] * (4 - len(processed_file))
+            padded_file = processed_file + ["0"] * (4 - len(processed_file))
             new_grid.append(padded_file)
 
         resulting_grid = self.construct_new_grid_v2(new_grid, direction)
@@ -225,9 +225,7 @@ class Game2048:
         return self.win
 
     def check_full(self):
-        #print(all(tile != " " for tile in self.gamegrid))
-        #print(*(self.merge_v3(direction, mode="can_move") for direction in ("w", "a", "s", "d")))
-        return all(tile != " " for tile in self.gamegrid) and not any(self.merge_v3(direction, mode="can_move") for direction in ("w", "a", "s", "d"))
+        return all(tile != "0" for tile in self.gamegrid) and not any(self.merge_v3(direction, mode="can_move") for direction in ("w", "a", "s", "d"))
 
 COLOURS = {
     "Default": {
@@ -353,9 +351,9 @@ class Button:
         if self.text_bound_box.contains(button_text_rect):
             self.gui.display.blit(button_text, button_text_rect)
         else:
-            self.polyline_text()
+            self.multiline_text()
 
-    def polyline_text(self, line_padding: int = 4):
+    def multiline_text(self, line_padding: int = 4):
         """Renders self.text as two centred lines inside text_bound_box."""
         lines = [self.font.render(word, False, COLOURS[self.gui.theme]["lfont"]) for word in self.text_split(self.text)]
         total_height = sum(text.get_height() for text in lines) + line_padding * (len(lines) - 1)
@@ -453,9 +451,9 @@ class Renderer:
         """Takes a surface and scales it down to a new size based on the display width, if it is larger than the display width.
         Alternatiely, if a pygame.pygame.Rect object is provided, it will clamp it to the width of the rect."""
         if clamping_rect is None:
-            scale_factor = min(1.0, (self.display_width - 50) / input_surface.get_width())
+            scale_factor = min(1.0, (self.display.get_width() - 50) / input_surface.get_width())
         else:
-            clamping_rect = pygame.pygame.Rect(clamping_rect) if isinstance(clamping_rect, tuple) else clamping_rect
+            clamping_rect = pygame.Rect(clamping_rect) if isinstance(clamping_rect, tuple) else clamping_rect
             scale_factor = min(1.0, clamping_rect.width / input_surface.get_width())
         return pygame.transform.scale_by(input_surface, scale_factor) if scale_factor != 1.0 else input_surface
 
@@ -471,7 +469,7 @@ class Renderer:
         self.display.blit(text_surface, text_surface.get_rect(center=centre_point))
 
     def create_option_box(self, selected=0):
-        self.themeoptions = OptionBox((115, 175, 200, 250 // len(self.themelist)), COLOURS[self.theme]["bg"], COLOURS[self.theme]["highlight"], pygame.font.SysFont('quicksand', 30, bold=True), COLOURS[self.theme]["dfont&buttons"], self.themelist, selected)
+        self.themeoptions = OptionBox(self.display, (115, 175, 200, 250 // len(self.themelist)), COLOURS[self.theme]["bg"], COLOURS[self.theme]["highlight"], pygame.font.SysFont('quicksand', 30, bold=True), COLOURS[self.theme]["dfont&buttons"], self.themelist, selected)
 
     def render_grid(self, gamegrid: list[str]):
         x = SPACING
@@ -480,11 +478,9 @@ class Renderer:
         pygame.draw.rect(self.display, COLOURS[self.theme]["gridbg"], (0, 0, self.window_size, self.window_size))
         for tile in gamegrid:
             tile_rect = pygame.Rect(x, y, TILE_SIZE, TILE_SIZE)
-            if tile != " ":
-                pygame.draw.rect(self.display, COLOURS[self.theme][tile if int(tile) <= 2048 else "4096+"], tile_rect, border_radius=3)
+            pygame.draw.rect(self.display, COLOURS[self.theme][tile if int(tile) <= 2048 else "4096+"], tile_rect, border_radius=3)
+            if tile != "0":
                 self.render_text_by_centre(tile, tile_rect.center, COLOURS[self.theme]["lfont" if int(tile) > 4 else "dfont&buttons"], font_size=40, bold=True, clamping_rect=tile_rect.inflate(-20, -20))
-            else:
-                pygame.draw.rect(self.display, COLOURS[self.theme]["0"], tile_rect, border_radius=3)
             x += TILE_SIZE + SPACING
             if x >= self.window_size:
                 x = SPACING
@@ -521,7 +517,7 @@ class Renderer:
         self.render_text_by_centre("Settings:", (self.element_sizes["background"].centerx, self.get_line_height(60)), COLOURS[self.theme]["dfont&buttons"], font_size=60, bold=True)
         self.render_text_by_centre("Themes:", (self.element_sizes["background"].centerx, self.element_sizes["background"].centery-110), COLOURS[self.theme]["dfont&buttons"], font=font)
         self.render_text_by_centre("AI Enabled:", (self.element_sizes["background"].centerx - (font.size("AI Enabled:")[0] // 3), self.element_sizes["background"].centery + 20), COLOURS[self.theme]["dfont&buttons"], font=font)
-        self.themeoptions.draw(self.display)
+        self.themeoptions.draw()
 
     def button_clicked(self, buttons: list[Button]) -> str | None:
         for button in buttons:
@@ -536,18 +532,12 @@ class Renderer:
             for button in buttons:
                 button.button_clicked()
 
-def checkquit():
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            raise SystemExit
-
 class GameController:
     def __init__(self) -> None:
         pygame.init()
         pygame.display.set_caption('2048')
         self.game: Game2048 = Game2048()
-        self.hai: Heuristic_AI = Heuristic_AI(self.game)
+        self.hai: HeuristicAI = HeuristicAI()
         self.renderer: Renderer = Renderer()
         self.show_menu: bool = True
         self.KEY_MAP: dict[int, Literal['w', 'a', 's', 'd']] = {
@@ -616,8 +606,8 @@ class GameController:
             raise SystemExit
 
     def settings(self) -> None:
-        self.renderer.clear_display()
         while True:
+            self.renderer.clear_display()
             button_clicked = self.renderer.button_clicked(self.renderer.buttons["settings"])
             self.renderer.render_settings()
             if button_clicked == "X": return
@@ -653,7 +643,7 @@ class GameController:
     def restart(self) -> None:
         """Creates a new game instance."""
         self.game = Game2048()
-        self.hai = Heuristic_AI(self.game)
+        self.hai = HeuristicAI()
         self.renderer.buttons["settings"][0].text = "Off"
 
     def check_quit(self):
