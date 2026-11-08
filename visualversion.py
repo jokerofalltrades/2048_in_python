@@ -395,7 +395,7 @@ class Button:
         return action
 
 class Renderer:
-    def __init__(self, theme):
+    def __init__(self, theme: str = "Default"):
         self.display = pygame.display.set_mode((WINDOW_SIZE, WINDOW_SIZE + BOTTOM_ROW_HEIGHT))
         self.window_size: int = WINDOW_SIZE
         self.theme = theme
@@ -509,6 +509,7 @@ class Renderer:
         self.render_text_by_centre(f"Your Score: {score}", (self.element_sizes["background"].centerx, self.element_sizes["background"].centery), COLOURS[self.theme]["dfont&buttons"], font_size=40)
 
     def render_menu(self) -> None:
+        self.clear_display()
         self.render_text_by_centre("2048", (self.element_sizes["background"].centerx, self.element_sizes["background"].centery - 120), COLOURS[self.theme]["dfont&buttons"], font_size=70, bold=True)
 
     def render_settings(self) -> None:
@@ -522,21 +523,18 @@ class Renderer:
         self.render_text_by_centre("AI Enabled:", (self.element_sizes["background"].centerx - (font.size("AI Enabled:")[0] // 3), self.element_sizes["background"].centery + 20), COLOURS[self.theme]["dfont&buttons"], font=font)
         self.themeoptions.draw(self.display)
 
-    def butt_clicked(self, rect):
-        action = False
-        pos = pygame.mouse.get_pos()
-        if rect.collidepoint(pos) and pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
-            self.clicked = True
-            action = True
-        if pygame.mouse.get_pressed()[0] == 0:
-            self.clicked = False
-        return action
-
     def button_clicked(self, buttons: list[Button]) -> str | None:
         for button in buttons:
             button.render()
             if button.button_clicked():
+                self.update_all_button_states()
                 return button.text
+
+    def update_all_button_states(self) -> None:
+        "Cycles all buttons to ensure they know the current state of the mouse."
+        for buttons in self.buttons.values():
+            for button in buttons:
+                button.button_clicked()
 
 def checkquit():
     for event in pygame.event.get():
@@ -544,106 +542,135 @@ def checkquit():
             pygame.quit()
             raise SystemExit
 
-def main():
-    pygame.init()
-    theme = "Default"
-    setup = 2
-    pygame.display.set_caption('2048')
-    game: Game2048 = Game2048()
-    hai = Heuristic_AI(game)
-    renderer = Renderer(theme)
-    main_menu_buttons: list[Button] = renderer.buttons["main_menu"]
-    winscreen_buttons: list[Button] = renderer.buttons["winscreen"]
-    losescreen_buttons: list[Button] = renderer.buttons["losescreen"]
-    settings_buttons: list[Button] = renderer.buttons["settings"]
-    while True:
-        if setup == 2:
-            renderer.clear_display()
-            while True:
-                renderer.render_menu()
-                button_clicked = renderer.button_clicked(main_menu_buttons)
-                if button_clicked == "Play":
-                    setup = 1
-                    break
-                if button_clicked == "Settings":
-                    renderer.clear_display()
-                    while True:
-                        button_clicked = renderer.button_clicked(settings_buttons)
-                        renderer.render_settings()
-                        if button_clicked == "X": break
-                        if button_clicked in ("On", "Off"):
-                            hai.set_state(not hai.get_state())
-                            settings_buttons[0].text = "On" if hai.get_state() else "Off"
-                        checkquit()
-                        pygame.display.update()
-                if button_clicked == "Quit":
-                    pygame.quit()
-                    raise SystemExit
-                checkquit()
-                pygame.display.update()
-        if setup == 1:
-            game = Game2048()
-            setup = 0
-        result = gameloop(game, renderer, hai)
-        if result == "win":
-            renderer.render_winscreen()
-            while True:
-                button_clicked = renderer.button_clicked(winscreen_buttons)
-                pygame.display.update()
-                if button_clicked == "Restart": setup = 1
-                if button_clicked: break
-                checkquit()
-        if result == "lose":
-            renderer.render_losescreen(game.score)
-            while True:
-                button_clicked = renderer.button_clicked(losescreen_buttons)
-                pygame.display.update()
-                if button_clicked:
-                    setup = 2 if button_clicked == "Menu" else 1
-                    break
-                checkquit()
-        if result == "menu":
-            setup = 2
+class GameController:
+    def __init__(self) -> None:
+        pygame.init()
+        pygame.display.set_caption('2048')
+        self.game: Game2048 = Game2048()
+        self.hai: Heuristic_AI = Heuristic_AI(self.game)
+        self.renderer: Renderer = Renderer()
+        self.show_menu: bool = True
+        self.KEY_MAP: dict[int, Literal['w', 'a', 's', 'd']] = {
+            pygame.K_w: "w", pygame.K_UP: "w",
+            pygame.K_a: "a", pygame.K_LEFT: "a",
+            pygame.K_s: "s", pygame.K_DOWN: "s",
+            pygame.K_d: "d", pygame.K_RIGHT: "d"
+        }
 
-def gameloop(game: Game2048, renderer: Renderer, hai: Heuristic_AI):
-    buttons: list[Button] = renderer.buttons["bottom_row"]
-    settings_buttons: list[Button] = renderer.buttons["settings"]
-    while not game.check_full():
-        allfull = game.check_full()
-        if game.check_win():
-            return "win"
+    def handle_game_events(self) -> None:
+        """Processes events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 raise SystemExit
-            if event.type == pygame.KEYDOWN and not allfull and not hai.get_state():
-                    direction = None
-                    if event.key in [pygame.K_w, pygame.K_UP]: direction = "w"
-                    if event.key in [pygame.K_a, pygame.K_LEFT]: direction = "a"
-                    if event.key in [pygame.K_s, pygame.K_DOWN]: direction = "s"
-                    if event.key in [pygame.K_d, pygame.K_RIGHT]: direction = "d"
-                    if direction and game.merge_v3(direction, mode="can_move"):
-                        game.merge_v3(direction, mode="execute")
-                        game.spawn_new_tile()
-        if hai.get_state():
-            hai.make_move(game)
-            game.spawn_new_tile()
-        renderer.render_grid(game.gamegrid)
-        renderer.render_bottom_row(game.score)
-        button_clicked = renderer.button_clicked(buttons)
-        if button_clicked == "Settings":
-            while True:
-                renderer.render_settings()
-                button_clicked = renderer.button_clicked(settings_buttons)
-                if button_clicked == "X": break
-                if button_clicked in ("On", "Off"):
-                    hai.set_state(not hai.get_state())
-                    settings_buttons[0].text = "On" if hai.get_state() else "Off"
-                checkquit()
-                pygame.display.update()
-        if button_clicked == "Menu": return "menu"
-        pygame.display.update()
-    return "lose"
+            if event.type != pygame.KEYDOWN or self.hai.get_state():
+                continue
+
+            direction = self.KEY_MAP.get(event.key)
+            if not direction or not self.game.merge_v3(direction, mode="can_move"):
+                continue
+
+            self.game.merge_v3(direction, mode="execute")
+            self.game.spawn_new_tile()
+
+    def run_game(self) -> bool:
+        """Executes the gameloop. Returns whether the user won."""
+        while not self.game.check_full():
+            if self.game.check_win():
+                return True
+
+            self.handle_game_events()
+            if self.hai.get_state():
+                self.hai.make_move(self.game)
+                self.game.spawn_new_tile()
+
+            self.renderer.render_grid(self.game.gamegrid)
+            self.renderer.render_bottom_row(self.game.score)
+            button_clicked = self.renderer.button_clicked(self.renderer.buttons["bottom_row"])
+            if button_clicked == "Settings":
+                self.settings()
+            if button_clicked == "Menu":
+                self.show_menu = True
+                self.quit_if_menu()
+
+            pygame.display.update()
+
+        return False
+
+    def menu(self) -> bool:
+        """Renders the menu screen. Returns whether or not to quit."""
+        while self.show_menu:
+            self.renderer.render_menu()
+            button_clicked = self.renderer.button_clicked(self.renderer.buttons["main_menu"])
+            if button_clicked == "Settings":
+                self.settings()
+            if button_clicked in ("Play", "Quit"):
+                return button_clicked == "Quit"
+            pygame.display.update()
+            self.check_quit()
+        return False
+
+    def quit_if_menu(self) -> None:
+        if self.menu():
+            pygame.quit()
+            raise SystemExit
+
+    def settings(self) -> None:
+        self.renderer.clear_display()
+        while True:
+            button_clicked = self.renderer.button_clicked(self.renderer.buttons["settings"])
+            self.renderer.render_settings()
+            if button_clicked == "X": return
+            if button_clicked in ("On", "Off"):
+                self.hai.set_state(not self.hai.get_state())
+                self.renderer.buttons["settings"][0].text = "On" if self.hai.get_state() else "Off"
+            pygame.display.update()
+            self.check_quit()
+
+    def win(self) -> None:
+        self.renderer.render_winscreen()
+        while True:
+            button_clicked = self.renderer.button_clicked(self.renderer.buttons["winscreen"])
+            if button_clicked == "Restart": self.restart()
+            if button_clicked:
+                self.show_menu = False
+                return
+            pygame.display.update()
+            self.check_quit()
+
+    def loss(self) -> None:
+        "Renders the losing screen. Returns whether to instantly restart or not."
+        self.renderer.render_losescreen(self.game.score)
+        while True:
+            button_clicked = self.renderer.button_clicked(self.renderer.buttons["losescreen"])
+            if button_clicked:
+                self.restart()
+                self.show_menu = button_clicked == "Menu"
+                return
+            pygame.display.update()
+            self.check_quit()
+
+    def restart(self) -> None:
+        """Creates a new game instance."""
+        self.game = Game2048()
+        self.hai = Heuristic_AI(self.game)
+        self.renderer.buttons["settings"][0].text = "Off"
+
+    def check_quit(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+
+    def main(self) -> None:
+        while True:
+            self.quit_if_menu()
+            win: bool = self.run_game()
+            self.renderer.clear_display()
+            if win:
+                self.win()
+            else:
+                self.loss()
 
 if __name__ == "__main__":
-    main()
+    GameController().main()
