@@ -69,14 +69,14 @@ class HeuristicAI:
             cornerbonus = 0
 
             for move in sequence:
-                if not game_copy.merge_v3(move, mode="can_move"):
+                if not game_copy.merge(move, mode="can_move"):
                     self.sequences[sequence] = -100000 if game_copy.check_full() else -1000000
                     break
 
-                points_gained = game_copy.merge_v3(move, mode="points")
+                points_gained = game_copy.merge(move, mode="points")
                 points_gained = points_gained if isinstance(points_gained, int) else 0
 
-                game_copy.merge_v3(move, mode="execute")
+                game_copy.merge(move, mode="execute")
                 game_copy.spawn_new_tile()
 
                 self.intgamemgrid = [int(tile) for tile in game_copy.gamegrid]
@@ -89,13 +89,13 @@ class HeuristicAI:
             self.intgamemgrid = [int(tile) for tile in game_copy.gamegrid]
             tilebonus = 4 ** max(6 - self.intgamemgrid.count(0), 0)
             smoothness = round(self.calculate_smoothness(game_copy) * 100, 3)
-            valid_moves = sum(1 for direction in ("w", "a", "s", "d") if game_copy.merge_v3(direction, mode="can_move")) * 25
+            valid_moves = sum(1 for direction in ("w", "a", "s", "d") if game_copy.merge(direction, mode="can_move")) * 25
             if self.sequences[sequence] == 0:
                 self.sequences[sequence] = self.points - tilebonus + smoothness + cornerbonus + valid_moves
         return max(self.sequences, key=lambda k: self.sequences[k])
 
     def make_move(self, game: 'Game2048'):
-        game.merge_v3(self.evaluate_sequences(game)[0], mode="execute")
+        game.merge(self.evaluate_sequences(game)[0], mode="execute")
 
 class OptionBox:
     def __init__(self, display: pygame.Surface, rect: pygame.Rect | tuple[int, int, int, int], colour: pygame.Color | tuple[int, int, int], highlight_colour: pygame.Color | tuple[int, int, int], font: pygame.font.Font, font_colour: pygame.Color | tuple[int, int, int], option_list: list[str], selected = 0):
@@ -175,7 +175,7 @@ class Game2048:
             merge_array = [merge_array[i][::-1] for i in range(4)]
         return merge_array
 
-    def merge_v3(self, direction: Literal["w", "a", "s", "d"], mode: Literal["execute", "simulate", "can_move", "points"] = "execute"):
+    def merge(self, direction: Literal["w", "a", "s", "d"], mode: Literal["execute", "simulate", "can_move", "points"] = "execute"):
         merge_grid: list[list[str]] = self.construct_merge_array(direction)
         new_grid: list[list[str]] = []
         points_gained: int = 0
@@ -225,7 +225,7 @@ class Game2048:
         return self.win
 
     def check_full(self):
-        return all(tile != "0" for tile in self.gamegrid) and not any(self.merge_v3(direction, mode="can_move") for direction in ("w", "a", "s", "d"))
+        return all(tile != "0" for tile in self.gamegrid) and not any(self.merge(direction, mode="can_move") for direction in ("w", "a", "s", "d"))
 
 COLOURS = {
     "Default": {
@@ -557,10 +557,10 @@ class GameController:
                 continue
 
             direction = self.KEY_MAP.get(event.key)
-            if not direction or not self.game.merge_v3(direction, mode="can_move"):
+            if not direction or not self.game.merge(direction, mode="can_move"):
                 continue
 
-            self.game.merge_v3(direction, mode="execute")
+            self.game.merge(direction, mode="execute")
             self.game.spawn_new_tile()
 
     def run_game(self) -> bool:
