@@ -21,9 +21,6 @@ class HeuristicAI:
         self.depth = AI_DEPTH
         self.state = False
 
-    def set_state(self, state): self.state = state
-    def get_state(self): return self.state
-
     def calculate_smoothness(self, game: 'Game2048'):
         """Calculate the smoothness of the grid (average log2 difference between adjacent tiles)."""
         smoothness = 0
@@ -553,7 +550,7 @@ class GameController:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 raise SystemExit
-            if event.type != pygame.KEYDOWN or self.hai.get_state():
+            if event.type != pygame.KEYDOWN or self.hai.state:
                 continue
 
             direction = self.KEY_MAP.get(event.key)
@@ -570,7 +567,7 @@ class GameController:
                 return True
 
             self.handle_game_events()
-            if self.hai.get_state():
+            if self.hai.state:
                 self.hai.make_move(self.game)
                 self.game.spawn_new_tile()
 
@@ -612,8 +609,8 @@ class GameController:
             self.renderer.render_settings()
             if button_clicked == "X": return
             if button_clicked in ("On", "Off"):
-                self.hai.set_state(not self.hai.get_state())
-                self.renderer.buttons["settings"][0].text = "On" if self.hai.get_state() else "Off"
+                self.hai.state = not self.hai.state
+                self.renderer.buttons["settings"][0].text = "On" if self.hai.state else "Off"
             pygame.display.update()
             self.check_quit()
 
@@ -643,7 +640,7 @@ class GameController:
     def restart(self) -> None:
         """Creates a new game instance."""
         self.game = Game2048()
-        self.hai = HeuristicAI()
+        self.hai.state = False
         self.renderer.buttons["settings"][0].text = "Off"
 
     def check_quit(self):
